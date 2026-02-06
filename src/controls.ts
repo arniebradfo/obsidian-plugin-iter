@@ -61,7 +61,6 @@ function buildDecorations(state: any): DecorationSet {
 			end,
 			Decoration.replace({
 				widget: new ControlWidget(controlId),
-				block: true,
 			})
 		);
 	}

@@ -1,6 +1,7 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
 import {controlField} from "./controls";
+import {registerCodeBlock} from "./codeblock";
 
 // Remember to rename these classes and interfaces!
 
@@ -11,6 +12,7 @@ export default class MyPlugin extends Plugin {
 		await this.loadSettings();
 
 		this.registerEditorExtension(controlField);
+		registerCodeBlock(this);
 
 		// This creates an icon in the left ribbon.
 		this.addRibbonIcon('dice', 'Sample', (evt: MouseEvent) => {
