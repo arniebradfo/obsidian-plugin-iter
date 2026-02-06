@@ -3,6 +3,8 @@ import {
 	WidgetType,
 	Decoration,
 	DecorationSet,
+	ViewPlugin,
+	ViewUpdate,
 } from "@codemirror/view";
 import { RangeSetBuilder, StateField, Transaction, Extension } from "@codemirror/state";
 
@@ -36,11 +38,9 @@ function getRegionDecorations(state: any): DecorationSet {
 
 		if (text === "---iter") {
 			inRegion = true;
-			// Background and start styling
 			builder.add(line.from, line.from, Decoration.line({ 
 				attributes: { class: "iter-region-line iter-region-start" } 
 			}));
-			// Add control buttons as a widget at the end of the line
 			builder.add(line.to, line.to, Decoration.widget({
 				widget: new RegionControlWidget(),
 				side: 1
@@ -79,4 +79,49 @@ export const regionField = StateField.define<DecorationSet>({
 	provide(field): Extension {
 		return EditorView.decorations.from(field);
 	},
+});
+
+/**
+ * Patcher to apply region classes to atomic blocks (embeds) like callouts, tables, and math
+ * which are not rendered as standard lines.
+ */
+export const regionPatcher = ViewPlugin.fromClass(class {
+	constructor(view: EditorView) {
+		this.patch(view);
+	}
+
+	update(update: ViewUpdate) {
+		if (update.docChanged || update.viewportChanged) {
+			this.patch(update.view);
+		}
+	}
+
+	patch(view: EditorView) {
+		const field = view.state.field(regionField);
+		const embedBlocks = view.dom.querySelectorAll('.cm-embed-block');
+		
+		embedBlocks.forEach(block => {
+			try {
+				const pos = view.posAtDOM(block);
+				let inRegion = false;
+				
+				field.between(pos, pos, (from, to, value) => {
+					const cls = (value.spec as any).attributes?.class;
+					if (cls && cls.includes('iter-region-line')) {
+						inRegion = true;
+					}
+				});
+
+				if (inRegion) {
+					block.classList.add('iter-region-line');
+					// If it's the start or end line, we might want those classes too, 
+					// but usually embeds are in the middle.
+				} else {
+					block.classList.remove('iter-region-line');
+				}
+			} catch (e) {
+				// posAtDOM can fail if the element is being unmounted
+			}
+		});
+	}
 });

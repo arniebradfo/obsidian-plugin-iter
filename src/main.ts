@@ -2,7 +2,7 @@ import {App, Editor, MarkdownView, Modal, Notice, Plugin} from 'obsidian';
 import {DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab} from "./settings";
 import {controlField} from "./controls";
 import {registerCodeBlock} from "./codeblock";
-import {regionField} from "./region";
+import {regionField, regionPatcher} from "./region";
 
 // Remember to rename these classes and interfaces!
 
@@ -12,7 +12,11 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		this.registerEditorExtension([controlField, regionField]);
+		this.registerEditorExtension([
+			controlField, 
+			regionField,
+			regionPatcher
+		]);
 		registerCodeBlock(this);
 
 		// This creates an icon in the left ribbon.
