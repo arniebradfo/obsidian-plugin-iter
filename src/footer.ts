@@ -23,8 +23,6 @@ class SubmitButtonWidget extends WidgetType {
 			const activeFile = this.plugin.app.workspace.getActiveFile();
 			if (!activeFile) return;
 
-			btn.innerText = "Thinking...";
-			btn.disabled = true;
 			try {
 				await executeChat(this.plugin, activeFile);
 				
@@ -38,9 +36,6 @@ class SubmitButtonWidget extends WidgetType {
 				}
 			} catch (e) {
 				new Notice("Error: " + (e instanceof Error ? e.message : String(e)));
-			} finally {
-				btn.innerText = "Submit to AI";
-				btn.disabled = false;
 			}
 		});
 

@@ -2,28 +2,45 @@ import { parseYaml, requestUrl, TFile, App } from "obsidian";
 import MyPlugin from "./main";
 
 export async function executeChat(plugin: MyPlugin, file: TFile) {
-	const content = await plugin.app.vault.read(file);
-	const messages = parseChatContent(content);
-	
-	const cache = plugin.app.metadataCache.getFileCache(file);
-	const model = cache?.frontmatter?.model || plugin.settings.defaultModel;
-
-	const response = await requestUrl({
-		url: `${plugin.settings.ollamaUrl}/api/chat`,
-		method: "POST",
-		body: JSON.stringify({
-			model: model,
-			messages: messages,
-			stream: false
-		})
+	const buttons = document.querySelectorAll(".iter-footer-btn");
+	buttons.forEach(btn => {
+		if (btn instanceof HTMLButtonElement) {
+			btn.innerText = "Thinking...";
+			btn.disabled = true;
+		}
 	});
 
-	const aiText = response.json.message.content;
-	
-	// Simply append to the end of the file
-	const newContent = content.trim() + `\n\n\`\`\`iter\nrole: assistant\n\`\`\`\n${aiText}\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+	try {
+		const content = await plugin.app.vault.read(file);
+		const messages = parseChatContent(content);
+		
+		const cache = plugin.app.metadataCache.getFileCache(file);
+		const model = cache?.frontmatter?.model || plugin.settings.defaultModel;
 
-	await plugin.app.vault.modify(file, newContent);
+		const response = await requestUrl({
+			url: `${plugin.settings.ollamaUrl}/api/chat`,
+			method: "POST",
+			body: JSON.stringify({
+				model: model,
+				messages: messages,
+				stream: false
+			})
+		});
+
+		const aiText = response.json.message.content;
+		
+		// Simply append to the end of the file
+		const newContent = content.trim() + `\n\n\`\`\`iter\nrole: assistant\n\`\`\`\n${aiText}\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+
+		await plugin.app.vault.modify(file, newContent);
+	} finally {
+		buttons.forEach(btn => {
+			if (btn instanceof HTMLButtonElement) {
+				btn.innerText = "Submit to AI";
+				btn.disabled = false;
+			}
+		});
+	}
 }
 
 export function parseChatContent(content: string) {
