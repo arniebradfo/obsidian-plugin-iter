@@ -2,15 +2,15 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import MyPlugin from "./main";
 
 export interface MyPluginSettings {
-	apiEndpoint: string;
-	showExecuteButton: boolean;
-	theme: 'light' | 'dark' | 'system';
+	ollamaUrl: string;
+	defaultModel: string;
+	systemPrompt: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
-	apiEndpoint: 'https://api.example.com',
-	showExecuteButton: true,
-	theme: 'system'
+	ollamaUrl: 'http://localhost:11434',
+	defaultModel: 'llama3',
+	systemPrompt: 'You are a helpful assistant.'
 }
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -23,42 +23,39 @@ export class SampleSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const { containerEl } = this;
-
 		containerEl.empty();
-
-		containerEl.createEl('h2', { text: 'Iter Plugin Settings' });
+		containerEl.createEl('h2', { text: 'Iter LLM Settings' });
 
 		new Setting(containerEl)
-			.setName('API Endpoint')
-			.setDesc('Endpoint for the iteration service')
+			.setName('Ollama URL')
+			.setDesc('The URL where your Ollama instance is running.')
 			.addText(text => text
-				.setPlaceholder('Enter endpoint')
-				.setValue(this.plugin.settings.apiEndpoint)
+				.setPlaceholder('http://localhost:11434')
+				.setValue(this.plugin.settings.ollamaUrl)
 				.onChange(async (value) => {
-					this.plugin.settings.apiEndpoint = value;
+					this.plugin.settings.ollamaUrl = value;
 					await this.plugin.saveSettings();
 				}));
 
 		new Setting(containerEl)
-			.setName('Show Execute Button')
-			.setDesc('Whether to show the execute button in the code blocks')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.showExecuteButton)
+			.setName('Default Model')
+			.setDesc('The model name to use (e.g., llama3, mistral).')
+			.addText(text => text
+				.setPlaceholder('llama3')
+				.setValue(this.plugin.settings.defaultModel)
 				.onChange(async (value) => {
-					this.plugin.settings.showExecuteButton = value;
+					this.plugin.settings.defaultModel = value;
 					await this.plugin.saveSettings();
 				}));
-				
+
 		new Setting(containerEl)
-			.setName('Theme')
-			.setDesc('Choose the appearance for Iter blocks')
-			.addDropdown(dropdown => dropdown
-				.addOption('light', 'Light')
-				.addOption('dark', 'Dark')
-				.addOption('system', 'System')
-				.setValue(this.plugin.settings.theme)
-				.onChange(async (value: 'light' | 'dark' | 'system') => {
-					this.plugin.settings.theme = value;
+			.setName('Default System Prompt')
+			.setDesc('The default system prompt for new chat files.')
+			.addTextArea(text => text
+				.setPlaceholder('You are a helpful assistant.')
+				.setValue(this.plugin.settings.systemPrompt)
+				.onChange(async (value) => {
+					this.plugin.settings.systemPrompt = value;
 					await this.plugin.saveSettings();
 				}));
 	}

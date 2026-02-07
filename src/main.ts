@@ -1,4 +1,4 @@
-import { App, Plugin } from 'obsidian';
+import { App, Plugin, TFile, Notice } from 'obsidian';
 import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 
@@ -8,11 +8,46 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// Register the fenced code block processor
 		registerCodeBlock(this);
 
-		// Add a settings tab
 		this.addSettingTab(new SampleSettingTab(this.app, this));
+
+		this.addCommand({
+			id: 'initialize-iter-chat',
+			name: 'Initialize Iter Chat',
+			callback: async () => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (activeFile) {
+					await this.initializeChatFile(activeFile);
+				} else {
+					new Notice("No active file found.");
+				}
+			}
+		});
+	}
+
+	async initializeChatFile(file: TFile) {
+		const content = await this.app.vault.read(file);
+		const frontmatter = `---
+iter-chat: true
+model: ${this.settings.defaultModel}
+---
+
+\`\`\`iter
+role: system
+\`\`\`
+${this.settings.systemPrompt}
+
+\`\`\`iter
+role: user
+\`\`\`
+
+\`\`\`iter
+type: submit
+\`\`\`
+`;
+		await this.app.vault.modify(file, frontmatter + "\n" + content);
+		new Notice("Chat initialized!");
 	}
 
 	onunload() {

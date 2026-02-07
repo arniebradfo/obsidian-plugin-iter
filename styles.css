@@ -1,19 +1,78 @@
-.iter-block-container {
+/* Chat Block Styling */
+.iter-chat-block {
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	padding: 15px;
-	margin: 10px 0;
-	background-color: var(--background-primary-alt);
+	border-radius: 6px;
+	padding: 8px 12px;
+	margin: 15px 0;
+	background-color: var(--background-secondary);
 }
 
-.iter-block-footer {
-	margin-top: 15px;
-	padding-top: 10px;
-	border-top: 1px solid var(--background-modifier-border);
+.iter-metadata-block {
+	border-left: 4px solid var(--interactive-accent);
+}
+
+.iter-block-header {
 	display: flex;
-	justify-content: flex-end;
+	align-items: center;
+	gap: 10px;
+	font-size: 0.85em;
 }
 
-.iter-block-container .markdown-rendered {
-	font-family: var(--font-text);
+.iter-label {
+	font-weight: bold;
+	color: var(--text-muted);
+}
+
+.iter-role-btn {
+	padding: 2px 8px;
+	border-radius: 4px;
+	font-size: 0.9em;
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.iter-role-user {
+	background-color: var(--background-primary-alt);
+	color: var(--text-normal);
+}
+
+.iter-role-assistant {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.iter-delete-btn {
+	background-color: transparent;
+	color: var(--text-error);
+	border: 1px solid var(--text-error);
+	margin-left: auto;
+}
+
+.iter-delete-btn:hover {
+	background-color: var(--text-error);
+	color: white;
+}
+
+.iter-submit-block {
+	display: flex;
+	justify-content: center;
+	padding: 15px;
+	background-color: var(--background-primary-alt);
+	border: 2px dashed var(--interactive-accent);
+}
+
+.iter-submit-btn {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: bold;
+	padding: 8px 20px;
+}
+
+.iter-submit-btn:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
+.iter-submit-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
 }
