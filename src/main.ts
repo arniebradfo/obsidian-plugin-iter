@@ -1,7 +1,8 @@
-import { App, Plugin, TFile, Notice } from 'obsidian';
+import { App, Plugin, TFile, Notice, MarkdownView } from 'obsidian';
 import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
+import { executeChat, isChatFile } from "./chat-logic";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -24,6 +25,27 @@ export default class MyPlugin extends Plugin {
 				} else {
 					new Notice("No active file found.");
 				}
+			}
+		});
+
+		this.addCommand({
+			id: 'submit-iter-chat',
+			name: 'Submit Iter Chat',
+			hotkeys: [{ modifiers: ["Mod"], key: "Enter" }],
+			checkCallback: (checking: boolean) => {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView && activeView.file && isChatFile(this.app, activeView.file.path)) {
+					if (!checking) {
+						executeChat(this, activeView.file).then(() => {
+							const editor = activeView.editor;
+							const lineCount = editor.lineCount();
+							editor.setCursor({ line: lineCount, ch: 0 });
+							editor.focus();
+						});
+					}
+					return true;
+				}
+				return false;
 			}
 		});
 	}
