@@ -1,24 +1,112 @@
-/* Region styling - refined for nesting */
-.iter-region-line {
-	/* border-inline: 1px solid var(--interactive-accent) !important; */
-	/* background-color: var(--background-primary-alt) !important; */
-	position: relative;
-
-	&:after {
-		content: "";
-		position: absolute;
-		inset: 0 -10px;
-		background-color: var(--background-secondary) !important;
-		pointer-events: none;
-		z-index: -1;
-	}
+/* Chat View Styling */
+.iter-chat-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	background-color: var(--background-primary);
 }
 
-/* Inner elements should not inherit if nested */
-.iter-region-line .iter-region-line {
-	&:after {
-		content: none;
-	}
+.iter-chat-header {
+	padding: 10px 15px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.iter-chat-header h4 {
+	margin: 0;
+	color: var(--text-accent);
+}
+
+.iter-chat-messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: 15px;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+}
+
+.iter-chat-bubble {
+	max-width: 85%;
+	padding: 12px;
+	border-radius: 8px;
+	position: relative;
+	box-shadow: var(--shadow-s);
+}
+
+.iter-chat-user {
+	align-self: flex-end;
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.iter-chat-assistant {
+	align-self: flex-start;
+	background-color: var(--background-secondary-alt);
+	border: 1px solid var(--background-modifier-border);
+}
+
+.iter-chat-editor-wrapper {
+	width: 100%;
+}
+
+.iter-chat-bubble textarea {
+	width: 100%;
+	background: transparent;
+	border: none;
+	color: inherit;
+	resize: none;
+	padding: 0;
+	margin: 0;
+	font-family: var(--font-text);
+	font-size: var(--font-text-size);
+	line-height: var(--line-height-normal);
+}
+
+.iter-chat-bubble textarea:focus {
+	box-shadow: none;
+}
+
+.iter-chat-bubble-controls {
+	display: none;
+	position: absolute;
+	top: -10px;
+	right: -10px;
+	z-index: 10;
+}
+
+.iter-chat-bubble:hover .iter-chat-bubble-controls {
+	display: flex;
+}
+
+.iter-chat-bubble-controls button {
+	padding: 2px 4px;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	box-shadow: var(--shadow-s);
+}
+
+.iter-chat-footer {
+	padding: 15px;
+	border-top: 1px solid var(--background-modifier-border);
+	display: flex;
+	justify-content: center;
+	background-color: var(--background-secondary);
+}
+
+/* Region styling - refined for nesting */
+.iter-region-line {
+	border-inline: 1px solid var(--interactive-accent) !important;
+	background-color: var(--background-primary-alt) !important;
+}
+
+/* Fix for embed blocks (callouts, tables, math) */
+.cm-embed-block.iter-region-line {
+	border-inline: 1px solid var(--interactive-accent) !important;
+	padding-left: 0 !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
 }
 
 .iter-region-start {
@@ -35,7 +123,6 @@
 	margin-bottom: 15px !important;
 }
 
-/* Control widget in region */
 .iter-region-controls {
 	display: inline-flex;
 	gap: 8px;

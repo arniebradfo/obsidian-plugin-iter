@@ -36,7 +36,7 @@ function getRegionDecorations(state: any): DecorationSet {
 		const line = doc.line(i);
 		const text = line.text.trim();
 
-		if (text === "---iter") {
+		if (text === "---iter-begin---") {
 			inRegion = true;
 			builder.add(line.from, line.from, Decoration.line({ 
 				attributes: { class: "iter-region-line iter-region-start" } 
@@ -48,7 +48,7 @@ function getRegionDecorations(state: any): DecorationSet {
 			continue;
 		}
 
-		if (inRegion && text === "---") {
+		if (inRegion && text === "---iter-end---") {
 			inRegion = false;
 			builder.add(line.from, line.from, Decoration.line({ 
 				attributes: { class: "iter-region-line iter-region-end" } 
