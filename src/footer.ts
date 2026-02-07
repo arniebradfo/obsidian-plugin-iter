@@ -1,28 +1,32 @@
-import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
+import { StateField, Extension } from "@codemirror/state";
+import { executeChat, isChatFile } from "./chat-logic";
 import { Notice } from "obsidian";
 import MyPlugin from "./main";
-import { executeChat, isChatFile } from "./chat-logic";
 
-export const chatFooterPlugin = (plugin: MyPlugin) => ViewPlugin.fromClass(class {
-	footerEl: HTMLElement;
+class SubmitButtonWidget extends WidgetType {
+	constructor(readonly plugin: MyPlugin) {
+		super();
+	}
 
-	constructor(view: EditorView) {
-		this.footerEl = document.createElement("div");
-		this.footerEl.classList.add("iter-persistent-footer");
-		
-		const btn = this.footerEl.createEl("button", { 
+	toDOM(view: EditorView): HTMLElement {
+		const div = document.createElement("div");
+		div.classList.add("iter-submit-container");
+
+		const btn = div.createEl("button", {
 			text: "Submit to AI",
 			cls: "iter-footer-btn"
 		});
 
-		btn.addEventListener("click", async () => {
-			const activeFile = plugin.app.workspace.getActiveFile();
+		btn.addEventListener("click", async (e) => {
+			e.preventDefault();
+			const activeFile = this.plugin.app.workspace.getActiveFile();
 			if (!activeFile) return;
 
 			btn.innerText = "Thinking...";
 			btn.disabled = true;
 			try {
-				await executeChat(plugin, activeFile);
+				await executeChat(this.plugin, activeFile);
 			} catch (e) {
 				new Notice("Error: " + (e instanceof Error ? e.message : String(e)));
 			} finally {
@@ -31,27 +35,34 @@ export const chatFooterPlugin = (plugin: MyPlugin) => ViewPlugin.fromClass(class
 			}
 		});
 
-		// Add to the view
-		view.dom.appendChild(this.footerEl);
-		this.toggleVisibility(view);
+		return div;
 	}
 
-	update(update: ViewUpdate) {
-		if (update.docChanged || update.viewportChanged) {
-			this.toggleVisibility(update.view);
+	eq(other: SubmitButtonWidget) { return true; }
+}
+
+export function createFooterExtension(plugin: MyPlugin): Extension {
+	return StateField.define<DecorationSet>({
+		create(state) {
+			return Decoration.none;
+		},
+		update(value, tr) {
+			const activeFile = plugin.app.workspace.getActiveFile();
+			if (!activeFile || !isChatFile(plugin.app, activeFile.path)) {
+				return Decoration.none;
+			}
+
+			const pos = tr.state.doc.length;
+			return Decoration.set([
+				Decoration.widget({
+					widget: new SubmitButtonWidget(plugin),
+					side: 1, 
+					block: true
+				}).range(pos)
+			]);
+		},
+		provide(field) {
+			return EditorView.decorations.from(field);
 		}
-	}
-
-	toggleVisibility(view: EditorView) {
-		const activeFile = plugin.app.workspace.getActiveFile();
-		if (activeFile && isChatFile(plugin.app, activeFile.path)) {
-			this.footerEl.style.display = "flex";
-		} else {
-			this.footerEl.style.display = "none";
-		}
-	}
-
-	destroy() {
-		this.footerEl.remove();
-	}
-});
+	});
+}

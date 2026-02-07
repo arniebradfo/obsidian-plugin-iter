@@ -1,7 +1,7 @@
 import { App, Plugin, TFile, Notice } from 'obsidian';
 import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
-import { chatFooterPlugin } from "./footer";
+import { createFooterExtension } from "./footer";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -10,7 +10,7 @@ export default class MyPlugin extends Plugin {
 		await this.loadSettings();
 
 		registerCodeBlock(this);
-		this.registerEditorExtension(chatFooterPlugin(this));
+		this.registerEditorExtension(createFooterExtension(this));
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
