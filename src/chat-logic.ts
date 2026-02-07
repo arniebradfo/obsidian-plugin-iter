@@ -1,5 +1,23 @@
-import { parseYaml, TFile, App, MarkdownView } from "obsidian";
+import { parseYaml, TFile, App, MarkdownView, Notice } from "obsidian";
 import MyPlugin from "./main";
+import { ChatMessage, LLMProvider } from "./llm/interfaces";
+import { OllamaProvider } from "./llm/ollama";
+
+export function getProvider(plugin: MyPlugin, providerType?: string): LLMProvider {
+	const type = providerType || 'ollama'; // Default to ollama for now
+	
+	switch (type) {
+		case 'ollama':
+			return new OllamaProvider(plugin.settings);
+		case 'openai':
+		case 'anthropic':
+		case 'gemini':
+		case 'azure':
+			throw new Error(`Provider '${type}' is not yet implemented.`);
+		default:
+			throw new Error(`Unknown provider: ${type}`);
+	}
+}
 
 export async function executeChat(plugin: MyPlugin, file: TFile) {
 	const buttons = document.querySelectorAll(".iter-footer-btn");
@@ -16,24 +34,13 @@ export async function executeChat(plugin: MyPlugin, file: TFile) {
 		
 		const cache = plugin.app.metadataCache.getFileCache(file);
 		const model = cache?.frontmatter?.model || plugin.settings.defaultModel;
+		const providerType = cache?.frontmatter?.provider;
 
-		// We need the editor to do smooth streaming updates
 		const activeView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
 		const editor = activeView?.file?.path === file.path ? activeView.editor : null;
 
-		const response = await fetch(`${plugin.settings.ollamaUrl}/api/chat`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				model: model,
-				messages: messages,
-				stream: true
-			})
-		});
-
-		if (!response.ok) {
-			throw new Error(`Ollama error: ${response.statusText}. Ensure OLLAMA_ORIGINS is set.`);
-		}
+		const provider = getProvider(plugin, providerType);
+		const stream = provider.generateStream(messages, model);
 
 		// 1. Append the assistant start block
 		const assistantStart = `\n\n\`\`\`iter\nrole: assistant\n\`\`\`\n`;
@@ -44,36 +51,13 @@ export async function executeChat(plugin: MyPlugin, file: TFile) {
 		}
 
 		// 2. Stream the content
-		const reader = response.body?.getReader();
-		const decoder = new TextDecoder();
 		let fullAiText = "";
-
-		if (reader) {
-			while (true) {
-				const { done, value } = await reader.read();
-				if (done) break;
-
-				const chunk = decoder.decode(value, { stream: true });
-				const lines = chunk.split("\n");
-
-				for (const line of lines) {
-					if (!line.trim()) continue;
-					try {
-						const json = JSON.parse(line);
-						if (json.message?.content) {
-							const content = json.message.content;
-							fullAiText += content;
-							
-							if (editor) {
-								const lineCount = editor.lineCount();
-								const lastLine = editor.getLine(lineCount - 1);
-								editor.replaceRange(content, { line: lineCount - 1, ch: lastLine.length });
-							}
-						}
-					} catch (e) {
-						console.error("Error parsing chunk", line, e);
-					}
-				}
+		for await (const chunk of stream) {
+			fullAiText += chunk;
+			if (editor) {
+				const lineCount = editor.lineCount();
+				const lastLine = editor.getLine(lineCount - 1);
+				editor.replaceRange(chunk, { line: lineCount - 1, ch: lastLine.length });
 			}
 		}
 
@@ -81,12 +65,14 @@ export async function executeChat(plugin: MyPlugin, file: TFile) {
 		const userEnd = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
 		if (editor) {
 			editor.replaceRange(userEnd, { line: editor.lineCount(), ch: 0 });
-			// Move cursor to the end
 			editor.setCursor({ line: editor.lineCount(), ch: 0 });
 		} else {
 			await plugin.app.vault.append(file, userEnd);
 		}
 
+	} catch (e) {
+		new Notice("Chat Error: " + (e instanceof Error ? e.message : String(e)));
+		console.error(e);
 	} finally {
 		buttons.forEach(btn => {
 			if (btn instanceof HTMLButtonElement) {
@@ -97,8 +83,8 @@ export async function executeChat(plugin: MyPlugin, file: TFile) {
 	}
 }
 
-export function parseChatContent(content: string) {
-	const messages: any[] = [];
+export function parseChatContent(content: string): ChatMessage[] {
+	const messages: ChatMessage[] = [];
 	const parts = content.split(/```iter[\s\S]*?```/);
 	const blocks = content.match(/```iter[\s\S]*?```/g) || [];
 

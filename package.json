@@ -33,6 +33,6 @@
 		"@codemirror/search": "^6.6.0",
 		"@codemirror/state": "^6.5.4",
 		"@codemirror/view": "^6.39.12",
-		"obsidian": "latest"
+		"obsidian": "^1.11.4"
 	}
 }
