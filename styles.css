@@ -31,6 +31,19 @@
 	border: 1px solid var(--background-modifier-border);
 }
 
+.iter-role-display {
+	padding: 2px 8px;
+	border-radius: 4px;
+	font-size: 0.9em;
+	font-weight: bold;
+}
+
+.iter-role-system {
+	background-color: var(--background-secondary-alt);
+	color: var(--text-muted);
+	border: 1px solid var(--background-modifier-border);
+}
+
 .iter-role-user {
 	background-color: var(--background-primary-alt);
 	color: var(--text-normal);

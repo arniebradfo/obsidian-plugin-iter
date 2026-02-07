@@ -22,18 +22,27 @@ export function registerCodeBlock(plugin: MyPlugin) {
 
 function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
 	const role = config.role || "user";
+	const isSystem = role === "system";
 	
 	const header = container.createDiv({ cls: "iter-block-header" });
 	header.createSpan({ text: `Role: `, cls: "iter-label" });
-	const roleToggle = header.createEl("button", { 
-		text: role.toUpperCase(), 
-		cls: `iter-role-btn iter-role-${role}` 
-	});
+	
+	if (isSystem) {
+		header.createSpan({ 
+			text: "SYSTEM", 
+			cls: `iter-role-display iter-role-system` 
+		});
+	} else {
+		const roleToggle = header.createEl("button", { 
+			text: role.toUpperCase(), 
+			cls: `iter-role-btn iter-role-${role}` 
+		});
 
-	roleToggle.addEventListener("click", async () => {
-		const newRole = role === "user" ? "assistant" : "user";
-		await toggleRoleInFile(plugin, ctx, newRole, el);
-	});
+		roleToggle.addEventListener("click", async () => {
+			const newRole = role === "user" ? "assistant" : "user";
+			await toggleRoleInFile(plugin, ctx, newRole, el);
+		});
+	}
 
 	const deleteBtn = header.createEl("button", {
 		text: "Delete",
