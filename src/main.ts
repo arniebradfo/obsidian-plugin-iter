@@ -1,6 +1,7 @@
 import { App, Plugin, TFile, Notice } from 'obsidian';
 import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
+import { chatFooterPlugin } from "./footer";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -9,6 +10,7 @@ export default class MyPlugin extends Plugin {
 		await this.loadSettings();
 
 		registerCodeBlock(this);
+		this.registerEditorExtension(chatFooterPlugin(this));
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
@@ -40,10 +42,6 @@ ${this.settings.systemPrompt}
 
 \`\`\`iter
 role: user
-\`\`\`
-
-\`\`\`iter
-type: submit
 \`\`\`
 `;
 		await this.app.vault.modify(file, frontmatter + "\n" + content);

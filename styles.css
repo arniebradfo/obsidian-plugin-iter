@@ -73,6 +73,81 @@
 }
 
 .iter-submit-btn:disabled {
+
 	opacity: 0.6;
+
 	cursor: not-allowed;
+
+}
+
+
+
+/* Persistent Footer */
+
+.iter-persistent-footer {
+
+	position: sticky;
+
+	bottom: 0;
+
+	left: 0;
+
+	right: 0;
+
+	width: 100%;
+
+	display: flex;
+
+	justify-content: center;
+
+	padding: 20px;
+
+	background: linear-gradient(to top, var(--background-primary) 60%, transparent);
+
+	pointer-events: none; /* Let clicks pass through to text except on button */
+
+	z-index: 5;
+
+}
+
+
+
+.iter-footer-btn {
+
+	pointer-events: auto;
+
+	background-color: var(--interactive-accent);
+
+	color: var(--text-on-accent);
+
+	font-weight: bold;
+
+	padding: 10px 30px;
+
+	border-radius: 20px;
+
+	box-shadow: var(--shadow-l);
+
+	border: none;
+
+	cursor: pointer;
+
+}
+
+
+
+.iter-footer-btn:hover {
+
+	background-color: var(--interactive-accent-hover);
+
+	transform: translateY(-1px);
+
+}
+
+
+
+.iter-footer-btn:active {
+
+	transform: translateY(0);
+
 }
