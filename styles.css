@@ -41,11 +41,6 @@
 	color: var(--text-on-accent);
 }
 
-.iter-model-info {
-	color: var(--text-muted);
-	font-style: italic;
-}
-
 .iter-delete-btn {
 	background-color: transparent;
 	color: var(--text-error);
@@ -58,32 +53,101 @@
 	color: white;
 }
 
-/* Submit Widget Styling */
-.iter-submit-widget-container {
-	display: block; /* Force to its own line within the cm-line */
-	width: 100%;
-	text-align: center;
-	padding: 30px 0;
-	margin-top: 10px;
+.iter-submit-block {
+	display: flex;
+	justify-content: center;
+	padding: 15px;
+	background-color: var(--background-primary-alt);
+	border: 2px dashed var(--interactive-accent);
 }
 
-.iter-footer-btn {
+.iter-submit-btn {
 	background-color: var(--interactive-accent);
 	color: var(--text-on-accent);
 	font-weight: bold;
-	padding: 8px 24px;
-	border-radius: 18px;
-	box-shadow: var(--shadow-s);
-	border: none;
-	cursor: pointer;
-	transition: transform 0.1s ease;
+	padding: 8px 20px;
 }
+
+.iter-submit-btn:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
+.iter-submit-btn:disabled {
+
+	opacity: 0.6;
+
+	cursor: not-allowed;
+
+}
+
+
+
+/* Persistent Footer */
+
+.iter-persistent-footer {
+
+	position: sticky;
+
+	bottom: 0;
+
+	left: 0;
+
+	right: 0;
+
+	width: 100%;
+
+	display: flex;
+
+	justify-content: center;
+
+	padding: 20px;
+
+	background: linear-gradient(to top, var(--background-primary) 60%, transparent);
+
+	pointer-events: none; /* Let clicks pass through to text except on button */
+
+	z-index: 5;
+
+}
+
+
+
+.iter-footer-btn {
+
+	pointer-events: auto;
+
+	background-color: var(--interactive-accent);
+
+	color: var(--text-on-accent);
+
+	font-weight: bold;
+
+	padding: 10px 30px;
+
+	border-radius: 20px;
+
+	box-shadow: var(--shadow-l);
+
+	border: none;
+
+	cursor: pointer;
+
+}
+
+
 
 .iter-footer-btn:hover {
+
 	background-color: var(--interactive-accent-hover);
+
 	transform: translateY(-1px);
+
 }
 
+
+
 .iter-footer-btn:active {
+
 	transform: translateY(0);
+
 }
