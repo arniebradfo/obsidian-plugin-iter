@@ -1,4 +1,4 @@
-import { parseYaml, requestUrl, TFile, App } from "obsidian";
+import { parseYaml, TFile, App, MarkdownView } from "obsidian";
 import MyPlugin from "./main";
 
 export async function executeChat(plugin: MyPlugin, file: TFile) {
@@ -17,22 +17,76 @@ export async function executeChat(plugin: MyPlugin, file: TFile) {
 		const cache = plugin.app.metadataCache.getFileCache(file);
 		const model = cache?.frontmatter?.model || plugin.settings.defaultModel;
 
-		const response = await requestUrl({
-			url: `${plugin.settings.ollamaUrl}/api/chat`,
+		// We need the editor to do smooth streaming updates
+		const activeView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+		const editor = activeView?.file?.path === file.path ? activeView.editor : null;
+
+		const response = await fetch(`${plugin.settings.ollamaUrl}/api/chat`, {
 			method: "POST",
+			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				model: model,
 				messages: messages,
-				stream: false
+				stream: true
 			})
 		});
 
-		const aiText = response.json.message.content;
-		
-		// Simply append to the end of the file
-		const newContent = content.trim() + `\n\n\`\`\`iter\nrole: assistant\n\`\`\`\n${aiText}\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+		if (!response.ok) {
+			throw new Error(`Ollama error: ${response.statusText}. Ensure OLLAMA_ORIGINS is set.`);
+		}
 
-		await plugin.app.vault.modify(file, newContent);
+		// 1. Append the assistant start block
+		const assistantStart = `\n\n\`\`\`iter\nrole: assistant\n\`\`\`\n`;
+		if (editor) {
+			editor.replaceRange(assistantStart, { line: editor.lineCount(), ch: 0 });
+		} else {
+			await plugin.app.vault.append(file, assistantStart);
+		}
+
+		// 2. Stream the content
+		const reader = response.body?.getReader();
+		const decoder = new TextDecoder();
+		let fullAiText = "";
+
+		if (reader) {
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				const chunk = decoder.decode(value, { stream: true });
+				const lines = chunk.split("\n");
+
+				for (const line of lines) {
+					if (!line.trim()) continue;
+					try {
+						const json = JSON.parse(line);
+						if (json.message?.content) {
+							const content = json.message.content;
+							fullAiText += content;
+							
+							if (editor) {
+								const lineCount = editor.lineCount();
+								const lastLine = editor.getLine(lineCount - 1);
+								editor.replaceRange(content, { line: lineCount - 1, ch: lastLine.length });
+							}
+						}
+					} catch (e) {
+						console.error("Error parsing chunk", line, e);
+					}
+				}
+			}
+		}
+
+		// 3. Append the trailing user block
+		const userEnd = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+		if (editor) {
+			editor.replaceRange(userEnd, { line: editor.lineCount(), ch: 0 });
+			// Move cursor to the end
+			editor.setCursor({ line: editor.lineCount(), ch: 0 });
+		} else {
+			await plugin.app.vault.append(file, userEnd);
+		}
+
 	} finally {
 		buttons.forEach(btn => {
 			if (btn instanceof HTMLButtonElement) {
