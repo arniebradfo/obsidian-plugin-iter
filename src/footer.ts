@@ -1,7 +1,7 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
 import { executeChat, isChatFile } from "./chat-logic";
-import { Notice } from "obsidian";
+import { Notice, MarkdownView } from "obsidian";
 import MyPlugin from "./main";
 
 class SubmitButtonWidget extends WidgetType {
@@ -27,6 +27,15 @@ class SubmitButtonWidget extends WidgetType {
 			btn.disabled = true;
 			try {
 				await executeChat(this.plugin, activeFile);
+				
+				// Focus the editor and move cursor to the end
+				const markdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+				if (markdownView) {
+					const editor = markdownView.editor;
+					const lineCount = editor.lineCount();
+					editor.setCursor({ line: lineCount, ch: 0 });
+					editor.focus();
+				}
 			} catch (e) {
 				new Notice("Error: " + (e instanceof Error ? e.message : String(e)));
 			} finally {
