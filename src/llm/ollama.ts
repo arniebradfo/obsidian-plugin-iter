@@ -8,6 +8,18 @@ export class OllamaProvider implements LLMProvider {
 
 	constructor(private settings: MyPluginSettings) {}
 
+	async listModels(): Promise<string[]> {
+		try {
+			const response = await fetch(`${this.settings.ollamaUrl}/api/tags`);
+			if (!response.ok) return [];
+			const data = await response.json();
+			return data.models?.map((m: any) => m.name) || [];
+		} catch (e) {
+			console.error("Failed to list Ollama models", e);
+			return [];
+		}
+	}
+
 	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
 		const response = await fetch(`${this.settings.ollamaUrl}/api/chat`, {
 			method: "POST",

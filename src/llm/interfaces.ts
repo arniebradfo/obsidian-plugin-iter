@@ -7,4 +7,5 @@ export interface LLMProvider {
 	id: string;
 	name: string;
 	generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown>;
+	listModels(): Promise<string[]>;
 }

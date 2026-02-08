@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
 import { executeChat, isChatFile } from "./chat-logic";
+import { ModelSuggest } from "./model-suggest";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -12,6 +13,7 @@ export default class MyPlugin extends Plugin {
 
 		registerCodeBlock(this);
 		this.registerEditorExtension(createFooterExtension(this));
+		this.registerEditorSuggest(new ModelSuggest(this.app, this));
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 

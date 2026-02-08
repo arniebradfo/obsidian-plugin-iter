@@ -2,14 +2,16 @@ import { parseYaml, TFile, App, MarkdownView, Notice } from "obsidian";
 import MyPlugin from "./main";
 import { ChatMessage, LLMProvider } from "./llm/interfaces";
 import { OllamaProvider } from "./llm/ollama";
+import { OpenAIProvider } from "./llm/openai";
 
 export function getProvider(plugin: MyPlugin, providerType?: string): LLMProvider {
-	const type = providerType || 'ollama'; // Default to ollama for now
+	const type = providerType || 'ollama';
 	
 	switch (type) {
 		case 'ollama':
 			return new OllamaProvider(plugin.settings);
 		case 'openai':
+			return new OpenAIProvider(plugin.app, plugin.settings);
 		case 'anthropic':
 		case 'gemini':
 		case 'azure':
