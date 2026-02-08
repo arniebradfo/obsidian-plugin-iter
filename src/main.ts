@@ -38,7 +38,11 @@ export default class MyPlugin extends Plugin {
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView && activeView.file && isChatFile(this.app, activeView.file.path)) {
 					if (!checking) {
-						executeChat(this, activeView.file).then(() => {
+						// Try to find the model from the input field in the DOM
+						const modelInput = document.querySelector(".iter-model-input") as HTMLInputElement;
+						const selectedModel = modelInput?.value || this.settings.defaultModel;
+
+						executeChat(this, activeView.file, selectedModel).then(() => {
 							const editor = activeView.editor;
 							const lineCount = editor.lineCount();
 							editor.setCursor({ line: lineCount, ch: 0 });

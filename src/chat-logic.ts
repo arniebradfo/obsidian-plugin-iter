@@ -4,24 +4,27 @@ import { ChatMessage, LLMProvider } from "./llm/interfaces";
 import { OllamaProvider } from "./llm/ollama";
 import { OpenAIProvider } from "./llm/openai";
 
-export function getProvider(plugin: MyPlugin, providerType?: string): LLMProvider {
-	const type = providerType || 'ollama';
-	
-	switch (type) {
+export function getProvider(plugin: MyPlugin, modelString: string): { provider: LLMProvider, actualModel: string } {
+	let providerId = 'ollama';
+	let actualModel = modelString;
+
+	if (modelString.includes('/')) {
+		const parts = modelString.split('/');
+		providerId = parts[0] || 'ollama';
+		actualModel = parts[1] || modelString;
+	}
+
+	switch (providerId) {
 		case 'ollama':
-			return new OllamaProvider(plugin.settings);
+			return { provider: new OllamaProvider(plugin.settings), actualModel };
 		case 'openai':
-			return new OpenAIProvider(plugin.app, plugin.settings);
-		case 'anthropic':
-		case 'gemini':
-		case 'azure':
-			throw new Error(`Provider '${type}' is not yet implemented.`);
+			return { provider: new OpenAIProvider(plugin.app, plugin.settings), actualModel };
 		default:
-			throw new Error(`Unknown provider: ${type}`);
+			throw new Error(`Unknown provider: ${providerId}`);
 	}
 }
 
-export async function executeChat(plugin: MyPlugin, file: TFile) {
+export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: string) {
 	const buttons = document.querySelectorAll(".iter-footer-btn");
 	buttons.forEach(btn => {
 		if (btn instanceof HTMLButtonElement) {
@@ -34,18 +37,14 @@ export async function executeChat(plugin: MyPlugin, file: TFile) {
 		const content = await plugin.app.vault.read(file);
 		const messages = parseChatContent(content);
 		
-		const cache = plugin.app.metadataCache.getFileCache(file);
-		const model = cache?.frontmatter?.model || plugin.settings.defaultModel;
-		const providerType = cache?.frontmatter?.provider;
-
 		const activeView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
 		const editor = activeView?.file?.path === file.path ? activeView.editor : null;
 
-		const provider = getProvider(plugin, providerType);
-		const stream = provider.generateStream(messages, model);
+		const { provider, actualModel } = getProvider(plugin, selectedModel);
+		const stream = provider.generateStream(messages, actualModel);
 
-		// 1. Append the assistant start block
-		const assistantStart = `\n\n\`\`\`iter\nrole: assistant\n\`\`\`\n`;
+		// 1. Append the assistant start block with the model recorded
+		const assistantStart = `\n\n\`\`\`iter\nrole: assistant\nmodel: ${selectedModel}\n\`\`\`\n`;
 		if (editor) {
 			editor.replaceRange(assistantStart, { line: editor.lineCount(), ch: 0 });
 		} else {
@@ -53,9 +52,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile) {
 		}
 
 		// 2. Stream the content
-		let fullAiText = "";
 		for await (const chunk of stream) {
-			fullAiText += chunk;
 			if (editor) {
 				const lineCount = editor.lineCount();
 				const lastLine = editor.getLine(lineCount - 1);

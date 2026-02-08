@@ -111,7 +111,19 @@
 
 
 
+	flex-direction: row; /* Horizontal */
+
+
+
 	justify-content: center;
+
+
+
+	align-items: center;
+
+
+
+	gap: 15px;
 
 
 
@@ -127,7 +139,55 @@
 
 
 
+.iter-model-input-wrapper {
+
+
+
+	width: auto;
+
+
+
+}
+
+
+
+
+
+
+
+.iter-model-input {
+
+
+
+	width: 200px; /* More compact for side-by-side */
+
+
+
+	text-align: left;
+
+
+
+	border-radius: 4px;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
 .iter-footer-btn {
+
+
+
+
 
 
 
