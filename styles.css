@@ -86,163 +86,47 @@
 }
 
 .iter-submit-btn:disabled {
-
 	opacity: 0.6;
-
 	cursor: not-allowed;
-
 }
-
-
 
 /* Persistent Footer - Flowing with content */
 
-
-
 .iter-submit-container {
-
-
-
 	width: 100%;
-
-
-
-	display: flex;
-
-
-
-	flex-direction: row; /* Horizontal */
-
-
-
-	justify-content: center;
-
-
-
+	display: flex !important;
 	align-items: center;
-
-
-
 	gap: 15px;
-
-
-
 	padding: 40px 0;
-
-
-
 }
-
-
-
-
-
-
 
 .iter-model-input-wrapper {
-
-
-
 	width: auto;
-
-
-
 }
-
-
-
-
-
-
 
 .iter-model-input {
-
-
-
-	width: 200px; /* More compact for side-by-side */
-
-
-
+	width: 200px;
+	/* More compact for side-by-side */
 	text-align: left;
-
-
-
 	border-radius: 4px;
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
 
 .iter-footer-btn {
-
-
-
-
-
-
-
 	background-color: var(--interactive-accent);
-
-
-
 	color: var(--text-on-accent);
-
-
-
 	font-weight: bold;
-
-
-
 	padding: 10px 30px;
-
-
-
 	border-radius: 20px;
-
-
-
 	box-shadow: var(--shadow-l);
-
-
-
 	border: none;
-
-
-
 	cursor: pointer;
-
-
-
 }
-
-
-
-
-
-
 
 .iter-footer-btn:hover {
-
 	background-color: var(--interactive-accent-hover);
-
 	transform: translateY(-1px);
-
 }
 
-
-
 .iter-footer-btn:active {
-
 	transform: translateY(0);
-
 }
