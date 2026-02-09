@@ -2,11 +2,13 @@ import { App } from "obsidian";
 import MyPlugin from "../main";
 import { OllamaProvider } from "./ollama";
 import { OpenAIProvider } from "./openai";
+import { GeminiProvider } from "./gemini";
 
 export async function getAllAvailableModels(app: App, plugin: MyPlugin): Promise<string[]> {
 	const providers = [
 		new OllamaProvider(plugin.settings),
-		new OpenAIProvider(app, plugin.settings)
+		new OpenAIProvider(app, plugin.settings),
+		new GeminiProvider(app, plugin.settings)
 	];
 
 	const allModels: string[] = [];

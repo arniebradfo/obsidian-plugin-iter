@@ -3,6 +3,7 @@ import MyPlugin from "./main";
 import { ChatMessage, LLMProvider } from "./llm/interfaces";
 import { OllamaProvider } from "./llm/ollama";
 import { OpenAIProvider } from "./llm/openai";
+import { GeminiProvider } from "./llm/gemini";
 
 export function getProvider(plugin: MyPlugin, modelString: string): { provider: LLMProvider, actualModel: string } {
 	let providerId = 'ollama';
@@ -19,6 +20,8 @@ export function getProvider(plugin: MyPlugin, modelString: string): { provider: 
 			return { provider: new OllamaProvider(plugin.settings), actualModel };
 		case 'openai':
 			return { provider: new OpenAIProvider(plugin.app, plugin.settings), actualModel };
+		case 'gemini':
+			return { provider: new GeminiProvider(plugin.app, plugin.settings), actualModel };
 		default:
 			throw new Error(`Unknown provider: ${providerId}`);
 	}
