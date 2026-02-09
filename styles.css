@@ -66,30 +66,6 @@
 	color: white;
 }
 
-.iter-submit-block {
-	display: flex;
-	justify-content: center;
-	padding: 15px;
-	background-color: var(--background-primary-alt);
-	border: 2px dashed var(--interactive-accent);
-}
-
-.iter-submit-btn {
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-	font-weight: bold;
-	padding: 8px 20px;
-}
-
-.iter-submit-btn:hover {
-	background-color: var(--interactive-accent-hover);
-}
-
-.iter-submit-btn:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
-}
-
 /* Persistent Footer - Flowing with content */
 
 .iter-submit-container {
