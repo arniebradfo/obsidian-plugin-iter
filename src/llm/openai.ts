@@ -9,15 +9,35 @@ export class OpenAIProvider implements LLMProvider {
 	constructor(private app: App, private settings: MyPluginSettings) {}
 
 	async listModels(): Promise<string[]> {
-		// We could fetch from https://api.openai.com/v1/models, 
-		// but it returns a lot of non-chat models. 
-		// Returning a curated list is better for UX.
 		return [
+			"gpt-5.2",
+			"gpt-5.2-pro",
+			"gpt-5.2-chat-latest",
+			"gpt-5.1",
+			"gpt-5.1-chat-latest",
+			"gpt-5",
+			"gpt-5-pro",
+			"gpt-5-mini",
+			"gpt-5-nano",
+			"gpt-5-chat-latest",
+			"o4-mini",
+			"o3",
+			"o3-mini",
+			"o3-pro",
+			"o1",
+			"o1-pro",
+			"o1-mini",
+			"o1-preview",
 			"gpt-4o",
 			"gpt-4o-mini",
+			"chatgpt-4o-latest",
+			"gpt-4.1",
+			"gpt-4.1-mini",
+			"gpt-4.1-nano",
 			"gpt-4-turbo",
 			"gpt-4",
-			"gpt-3.5-turbo"
+			"gpt-3.5-turbo",
+			"gpt-4.5-preview"
 		];
 	}
 
