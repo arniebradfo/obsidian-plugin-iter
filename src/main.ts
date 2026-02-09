@@ -38,9 +38,11 @@ export default class MyPlugin extends Plugin {
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView && activeView.file && isChatFile(this.app, activeView.file.path)) {
 					if (!checking) {
-						// Try to find the model from the input field in the DOM
-						const modelInput = document.querySelector(".iter-model-input") as HTMLInputElement;
+						// Search specifically within the active view's container
+						const modelInput = activeView.contentEl.querySelector(".iter-model-input") as HTMLInputElement;
 						const selectedModel = modelInput?.value || this.settings.defaultModel;
+
+						console.log(`Iter: Submitting chat with model "${selectedModel}" (found via query: ${!!modelInput})`);
 
 						executeChat(this, activeView.file, selectedModel).then(() => {
 							const editor = activeView.editor;

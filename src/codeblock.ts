@@ -44,6 +44,10 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 		});
 	}
 
+	if (config.model) {
+		header.createSpan({ text: ` | Model: ${config.model}`, cls: "iter-model-info" });
+	}
+	
 	const deleteBtn = header.createEl("button", {
 		text: "Delete",
 		cls: "iter-delete-btn"
@@ -52,9 +56,6 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 		await deleteSectionFromFile(plugin, ctx, el);
 	});
 
-	if (config.model) {
-		header.createSpan({ text: ` | Model: ${config.model}`, cls: "iter-model-info" });
-	}
 }
 
 async function toggleRoleInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, newRole: string, el: HTMLElement) {
