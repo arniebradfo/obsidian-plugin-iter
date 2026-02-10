@@ -6,44 +6,44 @@ export class OpenAIProvider implements LLMProvider {
 	id = "openai";
 	name = "OpenAI";
 
-	constructor(private app: App, private settings: MyPluginSettings) {}
+	constructor(private app: App, private settings: MyPluginSettings) { }
 
 	async listModels(): Promise<string[]> {
 		return [
 			"gpt-5.2",
 			"gpt-5.2-pro",
-			"gpt-5.2-chat-latest",
-			"gpt-5.1",
-			"gpt-5.1-chat-latest",
-			"gpt-5",
-			"gpt-5-pro",
+			// "gpt-5.2-chat-latest",
+			// "gpt-5.1",
+			// "gpt-5.1-chat-latest",
+			// "gpt-5",
+			// "gpt-5-pro",
 			"gpt-5-mini",
 			"gpt-5-nano",
-			"gpt-5-chat-latest",
+			// "gpt-5-chat-latest",
+			// "gpt-4.5-preview",
+			// "gpt-4.1",
+			// "gpt-4.1-mini",
+			// "gpt-4.1-nano",
+			// "gpt-4-turbo",
+			// "chatgpt-4o-latest",
+			// "gpt-4o",
+			// "gpt-4o-mini",
+			// "gpt-4",
+			// "gpt-3.5-turbo",
 			"o4-mini",
 			"o3",
 			"o3-mini",
 			"o3-pro",
-			"o1",
-			"o1-pro",
-			"o1-mini",
-			"o1-preview",
-			"gpt-4o",
-			"gpt-4o-mini",
-			"chatgpt-4o-latest",
-			"gpt-4.1",
-			"gpt-4.1-mini",
-			"gpt-4.1-nano",
-			"gpt-4-turbo",
-			"gpt-4",
-			"gpt-3.5-turbo",
-			"gpt-4.5-preview"
+			// "o1",
+			// "o1-pro",
+			// "o1-mini",
+			// "o1-preview",
 		];
 	}
 
 	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
 		const apiKey = this.settings.openAiApiKeyName;
-		
+
 		if (!apiKey) {
 			throw new Error("OpenAI API key not found in settings. Please configure it in the plugin settings.");
 		}
@@ -82,7 +82,7 @@ export class OpenAIProvider implements LLMProvider {
 				for (const line of lines) {
 					const trimmedLine = line.trim();
 					if (!trimmedLine || trimmedLine === "data: [DONE]") continue;
-					
+
 					if (trimmedLine.startsWith("data: ")) {
 						try {
 							const json = JSON.parse(trimmedLine.substring(6));
