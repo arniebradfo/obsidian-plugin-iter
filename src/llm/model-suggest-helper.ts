@@ -1,4 +1,4 @@
-import { App } from "obsidian";
+import { App, AbstractInputSuggest } from "obsidian";
 import MyPlugin from "../main";
 import { OllamaProvider } from "./ollama";
 import { OpenAIProvider } from "./openai";
@@ -22,4 +22,25 @@ export async function getAllAvailableModels(app: App, plugin: MyPlugin): Promise
 		}
 	}
 	return allModels;
+}
+
+export class ModelInputSuggest extends AbstractInputSuggest<string> {
+	constructor(app: App, private input: HTMLInputElement, private plugin: MyPlugin) {
+		super(app, input);
+	}
+
+	async getSuggestions(query: string): Promise<string[]> {
+		const allModels = await getAllAvailableModels(this.app, this.plugin);
+		return allModels.filter(m => m.toLowerCase().contains(query.toLowerCase()));
+	}
+
+	renderSuggestion(value: string, el: HTMLElement): void {
+		el.setText(value);
+	}
+
+	selectSuggestion(value: string): void {
+		this.input.value = value;
+		this.input.dispatchEvent(new Event('input'));
+		this.close();
+	}
 }

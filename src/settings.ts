@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting, SettingGroup, TextComponent } from "obsidian";
 import MyPlugin from "./main";
+import { ModelInputSuggest } from "./llm/model-suggest-helper";
 
 export interface MyPluginSettings {
 	// General
@@ -32,7 +33,7 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
  */
 function addSensitiveSetting(setting: Setting, value: string, onChange: (value: string) => Promise<void>) {
 	setting.addText((text: TextComponent) => {
-		text.inputEl.type = 'text'; // "password"; // Hide key from prying eyes
+		text.inputEl.type = "password"; // Hide key from prying eyes
 		text.setPlaceholder('Enter API Key...')
 			.setValue(value)
 			.onChange(onChange);
@@ -69,13 +70,15 @@ export class SampleSettingTab extends PluginSettingTab {
 			.addSetting((setting: Setting) => {
 				setting.setName('Default Model Name')
 					.setDesc('The fallback model identifier (e.g. llama3, gpt-4o, claude-3-5-sonnet-20240620).')
-					.addText(text => text
-						.setPlaceholder('llama3')
-						.setValue(this.plugin.settings.defaultModel)
-						.onChange(async (value) => {
-							this.plugin.settings.defaultModel = value;
-							await this.plugin.saveSettings();
-						}));
+					.addText(text => {
+						text.setPlaceholder('llama3')
+							.setValue(this.plugin.settings.defaultModel)
+							.onChange(async (value) => {
+								this.plugin.settings.defaultModel = value;
+								await this.plugin.saveSettings();
+							});
+						new ModelInputSuggest(this.app, text.inputEl, this.plugin);
+					});
 			});
 
 		// --- Ollama Group ---

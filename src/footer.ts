@@ -1,30 +1,9 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
 import { executeChat, isChatFile } from "./chat-logic";
-import { Notice, MarkdownView, TextComponent, AbstractInputSuggest, App } from "obsidian";
+import { Notice, MarkdownView, TextComponent } from "obsidian";
 import MyPlugin from "./main";
-import { getAllAvailableModels } from "./llm/model-suggest-helper";
-
-class ModelInputSuggest extends AbstractInputSuggest<string> {
-	constructor(app: App, private input: HTMLInputElement, private plugin: MyPlugin) {
-		super(app, input);
-	}
-
-	async getSuggestions(query: string): Promise<string[]> {
-		const allModels = await getAllAvailableModels(this.app, this.plugin);
-		return allModels.filter(m => m.toLowerCase().contains(query.toLowerCase()));
-	}
-
-	renderSuggestion(value: string, el: HTMLElement): void {
-		el.setText(value);
-	}
-
-	selectSuggestion(value: string): void {
-		this.input.value = value;
-		this.input.dispatchEvent(new Event('input'));
-		this.close();
-	}
-}
+import { ModelInputSuggest } from "./llm/model-suggest-helper";
 
 class SubmitButtonWidget extends WidgetType {
 	constructor(readonly plugin: MyPlugin) {
@@ -48,7 +27,7 @@ class SubmitButtonWidget extends WidgetType {
 		
 		modelInput.inputEl.addClass("iter-model-input");
 		
-		// Attach suggest
+		// Attach shared suggest logic
 		new ModelInputSuggest(this.plugin.app, modelInput.inputEl, this.plugin);
 
 		btn.addEventListener("click", async (e) => {
