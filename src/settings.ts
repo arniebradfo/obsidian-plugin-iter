@@ -7,13 +7,14 @@ export interface MyPluginSettings {
 	systemPrompt: string;
 	defaultModel: string;
 
-	// Providers (currently storing actual keys due to Obsidian SecretStorage issues)
+	// Providers
 	ollamaUrl: string;
 	openAiApiKeyName: string;
 	anthropicApiKeyName: string;
 	geminiApiKeyName: string;
 	azureOpenAiKeyName: string;
 	azureOpenAiEndpoint: string;
+	azureOpenAiModels: string; // New field
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
@@ -24,16 +25,13 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	anthropicApiKeyName: '',
 	geminiApiKeyName: '',
 	azureOpenAiKeyName: '',
-	azureOpenAiEndpoint: ''
+	azureOpenAiEndpoint: '',
+	azureOpenAiModels: 'gpt-4o,gpt-35-turbo' // Default examples
 }
 
-/**
- * Helper to add a sensitive setting (API Key). 
- * Easy to swap between TextComponent and SecretComponent later.
- */
 function addSensitiveSetting(setting: Setting, value: string, onChange: (value: string) => Promise<void>) {
 	setting.addText((text: TextComponent) => {
-		text.inputEl.type = "password"; // Hide key from prying eyes
+		text.inputEl.type = "password";
 		text.setPlaceholder('Enter API Key...')
 			.setValue(value)
 			.onChange(onChange);
@@ -69,7 +67,7 @@ export class SampleSettingTab extends PluginSettingTab {
 			})
 			.addSetting((setting: Setting) => {
 				setting.setName('Default Model Name')
-					.setDesc('The fallback model identifier (e.g. llama3, gpt-4o, claude-3-5-sonnet-20240620).')
+					.setDesc('The fallback model identifier.')
 					.addText(text => {
 						text.setPlaceholder('llama3')
 							.setValue(this.plugin.settings.defaultModel)
@@ -100,8 +98,7 @@ export class SampleSettingTab extends PluginSettingTab {
 		new SettingGroup(containerEl)
 			.setHeading('OpenAI')
 			.addSetting((setting: Setting) => {
-				setting.setName('OpenAI API Key')
-					.setDesc('Your OpenAI API key.');
+				setting.setName('OpenAI API Key');
 				addSensitiveSetting(setting, this.plugin.settings.openAiApiKeyName, async (value) => {
 					this.plugin.settings.openAiApiKeyName = value;
 					await this.plugin.saveSettings();
@@ -112,8 +109,7 @@ export class SampleSettingTab extends PluginSettingTab {
 		new SettingGroup(containerEl)
 			.setHeading('Anthropic')
 			.addSetting((setting: Setting) => {
-				setting.setName('Anthropic API Key')
-					.setDesc('Your Anthropic API key.');
+				setting.setName('Anthropic API Key');
 				addSensitiveSetting(setting, this.plugin.settings.anthropicApiKeyName, async (value) => {
 					this.plugin.settings.anthropicApiKeyName = value;
 					await this.plugin.saveSettings();
@@ -124,8 +120,7 @@ export class SampleSettingTab extends PluginSettingTab {
 		new SettingGroup(containerEl)
 			.setHeading('Google Gemini')
 			.addSetting((setting: Setting) => {
-				setting.setName('Gemini API Key')
-					.setDesc('Your Google Gemini API key.');
+				setting.setName('Gemini API Key');
 				addSensitiveSetting(setting, this.plugin.settings.geminiApiKeyName, async (value) => {
 					this.plugin.settings.geminiApiKeyName = value;
 					await this.plugin.saveSettings();
@@ -137,7 +132,7 @@ export class SampleSettingTab extends PluginSettingTab {
 			.setHeading('Azure OpenAI')
 			.addSetting((setting: Setting) => {
 				setting.setName('Azure Endpoint')
-					.setDesc('Your Azure OpenAI Endpoint URL.')
+					.setDesc('Azure OpenAI Endpoint URL.')
 					.addText((text: TextComponent) => text
 						.setPlaceholder('https://your-resource.openai.azure.com/')
 						.setValue(this.plugin.settings.azureOpenAiEndpoint)
@@ -147,12 +142,22 @@ export class SampleSettingTab extends PluginSettingTab {
 						}));
 			})
 			.addSetting((setting: Setting) => {
-				setting.setName('Azure API Key')
-					.setDesc('Your Azure OpenAI API key.');
+				setting.setName('Azure API Key');
 				addSensitiveSetting(setting, this.plugin.settings.azureOpenAiKeyName, async (value) => {
 					this.plugin.settings.azureOpenAiKeyName = value;
 					await this.plugin.saveSettings();
 				});
+			})
+			.addSetting((setting: Setting) => {
+				setting.setName('Deployment Names')
+					.setDesc('Comma-separated list of your Azure deployment IDs.')
+					.addText((text: TextComponent) => text
+						.setPlaceholder('deployment1,deployment2')
+						.setValue(this.plugin.settings.azureOpenAiModels)
+						.onChange(async (value: string) => {
+							this.plugin.settings.azureOpenAiModels = value;
+							await this.plugin.saveSettings();
+						}));
 			});
 	}
 }

@@ -4,13 +4,15 @@ import { OllamaProvider } from "./ollama";
 import { OpenAIProvider } from "./openai";
 import { GeminiProvider } from "./gemini";
 import { AnthropicProvider } from "./anthropic";
+import { AzureOpenAIProvider } from "./azure";
 
 export async function getAllAvailableModels(app: App, plugin: MyPlugin): Promise<string[]> {
 	const providers = [
 		new OllamaProvider(plugin.settings),
 		new OpenAIProvider(app, plugin.settings),
 		new GeminiProvider(app, plugin.settings),
-		new AnthropicProvider(app, plugin.settings)
+		new AnthropicProvider(app, plugin.settings),
+		new AzureOpenAIProvider(app, plugin.settings)
 	];
 
 	const allModels: string[] = [];

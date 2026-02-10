@@ -5,6 +5,7 @@ import { OllamaProvider } from "./llm/ollama";
 import { OpenAIProvider } from "./llm/openai";
 import { GeminiProvider } from "./llm/gemini";
 import { AnthropicProvider } from "./llm/anthropic";
+import { AzureOpenAIProvider } from "./llm/azure";
 
 export function getProvider(plugin: MyPlugin, modelString: string): { provider: LLMProvider, actualModel: string } {
 	let providerId = 'ollama';
@@ -25,6 +26,8 @@ export function getProvider(plugin: MyPlugin, modelString: string): { provider: 
 			return { provider: new GeminiProvider(plugin.app, plugin.settings), actualModel };
 		case 'anthropic':
 			return { provider: new AnthropicProvider(plugin.app, plugin.settings), actualModel };
+		case 'azure':
+			return { provider: new AzureOpenAIProvider(plugin.app, plugin.settings), actualModel };
 		default:
 			throw new Error(`Unknown provider: ${providerId}`);
 	}
