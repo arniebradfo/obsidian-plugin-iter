@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, SettingGroup, SecretComponent } from "obsidian";
+import { App, PluginSettingTab, Setting, SettingGroup, TextComponent } from "obsidian";
 import MyPlugin from "./main";
 
 export interface MyPluginSettings {
@@ -6,7 +6,7 @@ export interface MyPluginSettings {
 	systemPrompt: string;
 	defaultModel: string;
 
-	// Providers (these store the NAMES of the secrets in SecretStorage)
+	// Providers (currently storing actual keys due to Obsidian SecretStorage issues)
 	ollamaUrl: string;
 	openAiApiKeyName: string;
 	anthropicApiKeyName: string;
@@ -24,6 +24,19 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	geminiApiKeyName: '',
 	azureOpenAiKeyName: '',
 	azureOpenAiEndpoint: ''
+}
+
+/**
+ * Helper to add a sensitive setting (API Key). 
+ * Easy to swap between TextComponent and SecretComponent later.
+ */
+function addSensitiveSetting(setting: Setting, value: string, onChange: (value: string) => Promise<void>) {
+	setting.addText((text: TextComponent) => {
+		text.inputEl.type = 'text'; // "password"; // Hide key from prying eyes
+		text.setPlaceholder('Enter API Key...')
+			.setValue(value)
+			.onChange(onChange);
+	});
 }
 
 export class SampleSettingTab extends PluginSettingTab {
@@ -71,10 +84,10 @@ export class SampleSettingTab extends PluginSettingTab {
 			.addSetting((setting: Setting) => {
 				setting.setName('Ollama URL')
 					.setDesc('URL for your local Ollama instance.')
-					.addText(text => text
+					.addText((text: TextComponent) => text
 						.setPlaceholder('http://localhost:11434')
 						.setValue(this.plugin.settings.ollamaUrl)
-						.onChange(async (value) => {
+						.onChange(async (value: string) => {
 							this.plugin.settings.ollamaUrl = value;
 							await this.plugin.saveSettings();
 						}));
@@ -85,13 +98,11 @@ export class SampleSettingTab extends PluginSettingTab {
 			.setHeading('OpenAI')
 			.addSetting((setting: Setting) => {
 				setting.setName('OpenAI API Key')
-					.setDesc('Select OpenAI API key from SecretStorage')
-					.addComponent(el => new SecretComponent(this.app, el)
-						.setValue(this.plugin.settings.openAiApiKeyName)
-						.onChange(async (value) => {
-							this.plugin.settings.openAiApiKeyName = value;
-							await this.plugin.saveSettings();
-						}));
+					.setDesc('Your OpenAI API key.');
+				addSensitiveSetting(setting, this.plugin.settings.openAiApiKeyName, async (value) => {
+					this.plugin.settings.openAiApiKeyName = value;
+					await this.plugin.saveSettings();
+				});
 			});
 
 		// --- Anthropic Group ---
@@ -99,13 +110,11 @@ export class SampleSettingTab extends PluginSettingTab {
 			.setHeading('Anthropic')
 			.addSetting((setting: Setting) => {
 				setting.setName('Anthropic API Key')
-					.setDesc('Select Anthropic API key from SecretStorage')
-					.addComponent(el => new SecretComponent(this.app, el)
-						.setValue(this.plugin.settings.anthropicApiKeyName)
-						.onChange(async (value) => {
-							this.plugin.settings.anthropicApiKeyName = value;
-							await this.plugin.saveSettings();
-						}));
+					.setDesc('Your Anthropic API key.');
+				addSensitiveSetting(setting, this.plugin.settings.anthropicApiKeyName, async (value) => {
+					this.plugin.settings.anthropicApiKeyName = value;
+					await this.plugin.saveSettings();
+				});
 			});
 
 		// --- Google Gemini Group ---
@@ -113,13 +122,11 @@ export class SampleSettingTab extends PluginSettingTab {
 			.setHeading('Google Gemini')
 			.addSetting((setting: Setting) => {
 				setting.setName('Gemini API Key')
-					.setDesc('Select Gemini API key from SecretStorage')
-					.addComponent(el => new SecretComponent(this.app, el)
-						.setValue(this.plugin.settings.geminiApiKeyName)
-						.onChange(async (value) => {
-							this.plugin.settings.geminiApiKeyName = value;
-							await this.plugin.saveSettings();
-						}));
+					.setDesc('Your Google Gemini API key.');
+				addSensitiveSetting(setting, this.plugin.settings.geminiApiKeyName, async (value) => {
+					this.plugin.settings.geminiApiKeyName = value;
+					await this.plugin.saveSettings();
+				});
 			});
 
 		// --- Azure OpenAI Group ---
@@ -128,23 +135,21 @@ export class SampleSettingTab extends PluginSettingTab {
 			.addSetting((setting: Setting) => {
 				setting.setName('Azure Endpoint')
 					.setDesc('Your Azure OpenAI Endpoint URL.')
-					.addText(text => text
+					.addText((text: TextComponent) => text
 						.setPlaceholder('https://your-resource.openai.azure.com/')
 						.setValue(this.plugin.settings.azureOpenAiEndpoint)
-						.onChange(async (value) => {
+						.onChange(async (value: string) => {
 							this.plugin.settings.azureOpenAiEndpoint = value;
 							await this.plugin.saveSettings();
 						}));
 			})
 			.addSetting((setting: Setting) => {
 				setting.setName('Azure API Key')
-					.setDesc('Select Azure OpenAI API key from SecretStorage')
-					.addComponent(el => new SecretComponent(this.app, el)
-						.setValue(this.plugin.settings.azureOpenAiKeyName)
-						.onChange(async (value) => {
-							this.plugin.settings.azureOpenAiKeyName = value;
-							await this.plugin.saveSettings();
-						}));
+					.setDesc('Your Azure OpenAI API key.');
+				addSensitiveSetting(setting, this.plugin.settings.azureOpenAiKeyName, async (value) => {
+					this.plugin.settings.azureOpenAiKeyName = value;
+					await this.plugin.saveSettings();
+				});
 			});
 	}
 }

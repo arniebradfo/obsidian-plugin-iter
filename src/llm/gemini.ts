@@ -23,10 +23,10 @@ export class GeminiProvider implements LLMProvider {
 	}
 
 	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
-		const apiKey = await this.app.secretStorage.getSecret(this.settings.geminiApiKeyName);
+		const apiKey = this.settings.geminiApiKeyName;
 		
 		if (!apiKey) {
-			throw new Error("Gemini API key not found in SecretStorage. Please configure it in settings.");
+			throw new Error("Gemini API key not found in settings. Please configure it in the plugin settings.");
 		}
 
 		// Google's API uses a different message structure: { role: "user" | "model", parts: [{ text: string }] }
