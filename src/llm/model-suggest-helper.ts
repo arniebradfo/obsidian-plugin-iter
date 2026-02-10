@@ -6,7 +6,7 @@ import { GeminiProvider } from "./gemini";
 import { AnthropicProvider } from "./anthropic";
 import { AzureOpenAIProvider } from "./azure";
 
-export async function getAllAvailableModels(app: App, plugin: MyPlugin): Promise<string[]> {
+export async function getAllAvailableModels(app: App, plugin: MyPlugin, filterEnabled = true): Promise<string[]> {
 	const providers = [
 		new OllamaProvider(plugin.settings),
 		new OpenAIProvider(app, plugin.settings),
@@ -20,7 +20,13 @@ export async function getAllAvailableModels(app: App, plugin: MyPlugin): Promise
 	for (const provider of providers) {
 		try {
 			const models = await provider.listModels();
-			models.forEach(m => allModels.push(`${provider.id}/${m}`));
+			models.forEach(m => {
+				const modelId = `${provider.id}/${m}`;
+				// If filtering is on, only add if not explicitly disabled
+				if (!filterEnabled || plugin.settings.modelConfig[modelId] !== false) {
+					allModels.push(modelId);
+				}
+			});
 		} catch (e) {
 			console.error(`Failed to list models for ${provider.id}`, e);
 		}
@@ -34,7 +40,7 @@ export class ModelInputSuggest extends AbstractInputSuggest<string> {
 	}
 
 	async getSuggestions(query: string): Promise<string[]> {
-		const allModels = await getAllAvailableModels(this.app, this.plugin);
+		const allModels = await getAllAvailableModels(this.app, this.plugin, true);
 		return allModels.filter(m => m.toLowerCase().contains(query.toLowerCase()));
 	}
 
