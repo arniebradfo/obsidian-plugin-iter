@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, parseYaml, Notice } from "obsidian";
+import { MarkdownPostProcessorContext, parseYaml, Notice, setIcon } from "obsidian";
 import MyPlugin from "./main";
 import { isChatFile } from "./chat-logic";
 
@@ -13,8 +13,7 @@ export function registerCodeBlock(plugin: MyPlugin) {
 			}
 
 			const config = parseYaml(source) || {};
-			// const container = el.createDiv({ cls: "iter-chat-block iter-metadata-block" });
-			el.classList.add("iter-chat-block")
+			el.classList.add("iter-chat-block");
 
 			renderMetadataBlock(el, config, plugin, ctx, el);
 		}
@@ -28,15 +27,18 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	const header = container.createDiv({ cls: "iter-block-header" });
 	
 	if (isSystem) {
-		header.createSpan({ 
-			text: "SYSTEM", 
+		const span = header.createSpan({ 
 			cls: `iter-role-display iter-role-system` 
 		});
+		setIcon(span, "shield");
 	} else {
 		const roleToggle = header.createEl("button", { 
-			text: role.toUpperCase(), 
 			cls: `iter-role-btn iter-role-${role} clickable-icon` 
 		});
+		
+		const iconName = role === "user" ? "user" : "bot";
+		setIcon(roleToggle, iconName);
+		roleToggle.setAttr("aria-label", role.toUpperCase()); 
 
 		roleToggle.addEventListener("click", async () => {
 			const newRole = role === "user" ? "assistant" : "user";
@@ -49,13 +51,14 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	}
 	
 	const deleteBtn = header.createEl("button", {
-		text: "Delete",
 		cls: "iter-delete-btn clickable-icon mod-destructive"
 	});
+	setIcon(deleteBtn, "trash");
+	deleteBtn.setAttr("aria-label", "Delete message");
+
 	deleteBtn.addEventListener("click", async () => {
 		await deleteSectionFromFile(plugin, ctx, el);
 	});
-
 }
 
 async function toggleRoleInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, newRole: string, el: HTMLElement) {
