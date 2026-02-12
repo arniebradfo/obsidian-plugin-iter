@@ -50,6 +50,15 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 		header.createSpan({ text: ` | Model: ${config.model}`, cls: "iter-model-info" });
 	}
 	
+	const trimBtn = header.createEl("button", {
+		cls: "iter-trim-btn clickable-icon"
+	});
+	setIcon(trimBtn, "scissors");
+	trimBtn.setAttr("aria-label", "Trim blank lines");
+	trimBtn.addEventListener("click", async () => {
+		await trimSectionInFile(plugin, ctx, el);
+	});
+
 	const deleteBtn = header.createEl("button", {
 		cls: "iter-delete-btn clickable-icon mod-destructive"
 	});
@@ -59,6 +68,47 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	deleteBtn.addEventListener("click", async () => {
 		await deleteSectionFromFile(plugin, ctx, el);
 	});
+
+}
+
+async function trimSectionInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
+	const file = plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
+	if (!file || !("extension" in file)) return;
+
+	const content = await plugin.app.vault.read(file as any);
+	const lines = content.split("\n");
+	
+	const section = ctx.getSectionInfo(el);
+	if (!section) return;
+
+	// Find the end of this message (start of next block or end of file)
+	let messageEnd = lines.length;
+	for (let i = section.lineEnd + 1; i < lines.length; i++) {
+		if (lines[i]?.trim().startsWith("```iter")) {
+			messageEnd = i;
+			break;
+		}
+	}
+
+	const messageLines = lines.slice(section.lineEnd + 1, messageEnd);
+	
+	// Trim start
+	while (messageLines.length > 0 && messageLines[0]?.trim() === "") {
+		messageLines.shift();
+	}
+	// Trim end
+	while (messageLines.length > 0 && messageLines[messageLines.length - 1]?.trim() === "") {
+		messageLines.pop();
+	}
+
+	// Reconstruct: block + trimmed message + remaining file
+	const newLines = [
+		...lines.slice(0, section.lineEnd + 1),
+		...messageLines,
+		...lines.slice(messageEnd)
+	];
+
+	await plugin.app.vault.modify(file as any, newLines.join("\n"));
 }
 
 async function toggleRoleInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, newRole: string, el: HTMLElement) {
