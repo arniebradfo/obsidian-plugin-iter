@@ -11,22 +11,23 @@ class SubmitButtonWidget extends WidgetType {
 	}
 
 	toDOM(view: EditorView): HTMLElement {
-		const div = document.createElement("div");
-		div.classList.add("iter-submit-container");
+		const wrapperEl = document.createElement("div");
+		wrapperEl.classList.add("iter-chat-block", "iter-chat-block-submit");
 
-		const btn = div.createEl("button", {
+		const submitContainer = wrapperEl.createDiv({ cls: "iter-submit-container" });
+
+		const btn = submitContainer.createEl("button", {
 			text: "Submit to AI",
-			cls: "iter-footer-btn"
+			cls: "iter-footer-btn mod-cta"
 		});
 
 		// Model Input
-		const modelInputWrapper = div.createDiv({ cls: "iter-model-input-wrapper" });
-		const modelInput = new TextComponent(modelInputWrapper)
+		const modelInput = new TextComponent(submitContainer)
 			.setPlaceholder("provider/model")
 			.setValue(this.plugin.settings.defaultModel);
-		
+
 		modelInput.inputEl.addClass("iter-model-input");
-		
+
 		// Attach shared suggest logic
 		new ModelInputSuggest(this.plugin.app, modelInput.inputEl, this.plugin);
 
@@ -39,7 +40,7 @@ class SubmitButtonWidget extends WidgetType {
 
 			try {
 				await executeChat(this.plugin, activeFile, selectedModel);
-				
+
 				const markdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (markdownView) {
 					const editor = markdownView.editor;
@@ -52,7 +53,7 @@ class SubmitButtonWidget extends WidgetType {
 			}
 		});
 
-		return div;
+		return wrapperEl;
 	}
 
 	eq(other: SubmitButtonWidget) { return true; }
@@ -73,7 +74,7 @@ export function createFooterExtension(plugin: MyPlugin): Extension {
 			return Decoration.set([
 				Decoration.widget({
 					widget: new SubmitButtonWidget(plugin),
-					side: 1, 
+					side: 1,
 					block: true
 				}).range(pos)
 			]);

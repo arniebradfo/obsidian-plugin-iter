@@ -13,9 +13,10 @@ export function registerCodeBlock(plugin: MyPlugin) {
 			}
 
 			const config = parseYaml(source) || {};
-			const container = el.createDiv({ cls: "iter-chat-block iter-metadata-block" });
+			// const container = el.createDiv({ cls: "iter-chat-block iter-metadata-block" });
+			el.classList.add("iter-chat-block")
 
-			renderMetadataBlock(container, config, plugin, ctx, el);
+			renderMetadataBlock(el, config, plugin, ctx, el);
 		}
 	);
 }
@@ -25,7 +26,6 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	const isSystem = role === "system";
 	
 	const header = container.createDiv({ cls: "iter-block-header" });
-	header.createSpan({ text: `Role: `, cls: "iter-label" });
 	
 	if (isSystem) {
 		header.createSpan({ 
@@ -35,7 +35,7 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	} else {
 		const roleToggle = header.createEl("button", { 
 			text: role.toUpperCase(), 
-			cls: `iter-role-btn iter-role-${role}` 
+			cls: `iter-role-btn iter-role-${role} clickable-icon` 
 		});
 
 		roleToggle.addEventListener("click", async () => {
@@ -50,7 +50,7 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	
 	const deleteBtn = header.createEl("button", {
 		text: "Delete",
-		cls: "iter-delete-btn"
+		cls: "iter-delete-btn clickable-icon mod-destructive"
 	});
 	deleteBtn.addEventListener("click", async () => {
 		await deleteSectionFromFile(plugin, ctx, el);

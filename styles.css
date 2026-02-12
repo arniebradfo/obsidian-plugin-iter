@@ -1,69 +1,81 @@
 /* Chat Block Styling */
-.iter-chat-block {
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	padding: 8px 12px;
-	margin: 15px 0;
-	background-color: var(--background-secondary);
+
+.cm-lang-iter {
+	.edit-block-button {}
+
+	&:hover {
+		box-shadow: none !important;
+	}
+
+
+	/* no border on the top of the first .iter-chat-block */
+	.iter-chat-block::before {
+		content: none;
+	}
+
+	&~& {
+		.iter-chat-block::before {
+			content: '';
+		}
+	}
+
+	.edit-block-button {
+		top: unset;
+		/* make this equal to some variable or something */
+		bottom: 30px;
+	}
 }
 
-.iter-metadata-block {
-	border-left: 4px solid var(--interactive-accent);
+.iter-chat-block {
+	display: flex !important;
+	flex-direction: column;
+	gap: 2px;
+	padding: 2px 0;
+
+	--radius-chat: var(--radius-l);
+
+	&::before,
+	&::after {
+		content: '';
+		border: 2px solid var(--background-modifier-border);
+		/* border: 1px solid var(--text-faint); */
+		height: 20px;
+	}
+
+	&::before {
+		border-top-color: transparent;
+		border-radius: 0 0 var(--radius-chat) var(--radius-chat);
+		margin-bottom: 4em;
+		mask-image: linear-gradient(to bottom, transparent, black);
+	}
+
+	&::after {
+		border-bottom-color: transparent;
+		border-radius: var(--radius-chat) var(--radius-chat) 0 0;
+		mask-image: linear-gradient(to top, transparent, black);
+
+	}
+
 }
+
+.iter-chat-block-submit {
+	gap: 12px;
+
+	&::after {
+		content: none;
+	}
+
+	&::before {
+		margin: 0;
+	}
+}
+
 
 .iter-block-header {
 	display: flex;
-	align-items: center;
-	gap: 10px;
-	font-size: 0.85em;
-}
-
-.iter-label {
-	font-weight: bold;
-	color: var(--text-muted);
-}
-
-.iter-role-btn {
-	padding: 2px 8px;
-	border-radius: 4px;
-	font-size: 0.9em;
-	cursor: pointer;
-	border: 1px solid var(--background-modifier-border);
-}
-
-.iter-role-display {
-	padding: 2px 8px;
-	border-radius: 4px;
-	font-size: 0.9em;
-	font-weight: bold;
-}
-
-.iter-role-system {
-	background-color: var(--background-secondary-alt);
-	color: var(--text-muted);
-	border: 1px solid var(--background-modifier-border);
-}
-
-.iter-role-user {
-	background-color: var(--background-primary-alt);
-	color: var(--text-normal);
-}
-
-.iter-role-assistant {
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-}
-
-.iter-delete-btn {
-	background-color: transparent;
-	color: var(--text-error);
-	border: 1px solid var(--text-error);
-	margin-left: auto;
-}
-
-.iter-delete-btn:hover {
-	background-color: var(--text-error);
-	color: white;
+	align-items: baseline;
+	gap: 4px;
+	font-size: var(--font-ui-small);
 }
 
 /* Persistent Footer - Flowing with content */
@@ -72,37 +84,5 @@
 	width: 100%;
 	display: flex !important;
 	align-items: center;
-	gap: 15px;
-	padding: 40px 0;
-}
-
-.iter-model-input-wrapper {
-	width: auto;
-}
-
-.iter-model-input {
-	width: 200px;
-	/* More compact for side-by-side */
-	text-align: left;
-	border-radius: 4px;
-}
-
-.iter-footer-btn {
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent);
-	font-weight: bold;
-	padding: 10px 30px;
-	border-radius: 20px;
-	box-shadow: var(--shadow-l);
-	border: none;
-	cursor: pointer;
-}
-
-.iter-footer-btn:hover {
-	background-color: var(--interactive-accent-hover);
-	transform: translateY(-1px);
-}
-
-.iter-footer-btn:active {
-	transform: translateY(0);
+	gap: 16px;
 }
