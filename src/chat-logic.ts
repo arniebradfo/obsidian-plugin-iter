@@ -34,10 +34,17 @@ export function getProvider(plugin: MyPlugin, modelString: string): { provider: 
 }
 
 export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: string) {
-	const buttons = document.querySelectorAll(".iter-footer-btn");
-	buttons.forEach(btn => {
+	const submitButtons = document.querySelectorAll(".iter-submit-btn");
+	const allButtons = document.querySelectorAll(".iter-footer-btn");
+
+	submitButtons.forEach(btn => {
 		if (btn instanceof HTMLButtonElement) {
 			btn.innerText = "Thinking...";
+		}
+	});
+
+	allButtons.forEach(btn => {
+		if (btn instanceof HTMLButtonElement) {
 			btn.disabled = true;
 		}
 	});
@@ -94,9 +101,14 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		new Notice("Chat Error: " + (e instanceof Error ? e.message : String(e)));
 		console.error(e);
 	} finally {
-		buttons.forEach(btn => {
+		submitButtons.forEach(btn => {
 			if (btn instanceof HTMLButtonElement) {
 				btn.innerText = "Submit to AI";
+			}
+		});
+
+		allButtons.forEach(btn => {
+			if (btn instanceof HTMLButtonElement) {
 				btn.disabled = false;
 			}
 		});

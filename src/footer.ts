@@ -1,7 +1,7 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
 import { executeChat, isChatFile } from "./chat-logic";
-import { Notice, MarkdownView, TextComponent } from "obsidian";
+import { Notice, MarkdownView, TextComponent, setIcon } from "obsidian";
 import MyPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
 
@@ -16,13 +16,18 @@ class SubmitButtonWidget extends WidgetType {
 
 		const submitContainer = wrapperEl.createDiv({ cls: "iter-submit-container" });
 
-		const btn = submitContainer.createEl("button", {
+		// Left side: Info (Submit + Model)
+		const info = submitContainer.createDiv({ cls: "iter-info" });
+		// Right side: Controls (Add Message)
+		const controls = submitContainer.createDiv({ cls: "iter-controls" });
+
+		const btn = info.createEl("button", {
 			text: "Submit to AI",
-			cls: "iter-footer-btn mod-cta"
+			cls: "iter-footer-btn iter-submit-btn mod-cta"
 		});
 
 		// Model Input
-		const modelInput = new TextComponent(submitContainer)
+		const modelInput = new TextComponent(info)
 			.setPlaceholder("provider/model")
 			.setValue(this.plugin.settings.defaultModel);
 
@@ -30,6 +35,12 @@ class SubmitButtonWidget extends WidgetType {
 
 		// Attach shared suggest logic
 		new ModelInputSuggest(this.plugin.app, modelInput.inputEl, this.plugin);
+
+		const addMessageBtn = controls.createEl("button", {
+			cls: "iter-footer-btn iter-add-msg-btn clickable-icon"
+		});
+		setIcon(addMessageBtn, "user-plus");
+		addMessageBtn.setAttr("aria-label", "Add new message block");
 
 		btn.addEventListener("click", async (e) => {
 			e.preventDefault();
@@ -51,6 +62,22 @@ class SubmitButtonWidget extends WidgetType {
 			} catch (e) {
 				new Notice("Error: " + (e instanceof Error ? e.message : String(e)));
 			}
+		});
+
+		addMessageBtn.addEventListener("click", async (e) => {
+			e.preventDefault();
+			const activeFile = this.plugin.app.workspace.getActiveFile();
+			const markdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+			if (!activeFile || !markdownView) return;
+
+			const editor = markdownView.editor;
+			const newLine = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+			
+			editor.replaceRange(newLine, { line: editor.lineCount(), ch: 0 });
+			
+			const lineCount = editor.lineCount();
+			editor.setCursor({ line: lineCount, ch: 0 });
+			editor.focus();
 		});
 
 		return wrapperEl;
