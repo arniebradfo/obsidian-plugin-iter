@@ -27,6 +27,24 @@ export class AzureOpenAIProvider implements LLMProvider {
 		const baseUrl = endpoint.endsWith('/') ? endpoint : `${endpoint}/`;
 		const url = `${baseUrl}openai/deployments/${model}/chat/completions?api-version=2024-02-01`;
 
+		const formattedMessages = messages.map(m => {
+			if (!m.images || m.images.length === 0) {
+				return { role: m.role, content: m.content };
+			}
+
+			const contentParts: any[] = [{ type: "text", text: m.content }];
+			m.images.forEach(img => {
+				contentParts.push({
+					type: "image_url",
+					image_url: {
+						url: `data:${img.mimeType};base64,${img.data}`
+					}
+				});
+			});
+
+			return { role: m.role, content: contentParts };
+		});
+
 		const response = await fetch(url, {
 			method: "POST",
 			headers: {
@@ -34,7 +52,7 @@ export class AzureOpenAIProvider implements LLMProvider {
 				"api-key": apiKey
 			},
 			body: JSON.stringify({
-				messages: messages,
+				messages: formattedMessages,
 				stream: true
 			})
 		});

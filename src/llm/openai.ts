@@ -41,27 +41,45 @@ export class OpenAIProvider implements LLMProvider {
 		];
 	}
 
-	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
-		const apiKey = this.settings.openAiApiKeyName;
-
-		if (!apiKey) {
-			throw new Error("OpenAI API key not found in settings. Please configure it in the plugin settings.");
-		}
-
-		const response = await fetch("https://api.openai.com/v1/chat/completions", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"Authorization": `Bearer ${apiKey}`
-			},
-			body: JSON.stringify({
-				model: model,
-				messages: messages,
-				stream: true
-			})
-		});
-
-		if (!response.ok) {
+		async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
+			const apiKey = this.settings.openAiApiKeyName;
+			
+			if (!apiKey) {
+				throw new Error("OpenAI API key not found in settings. Please configure it in the plugin settings.");
+			}
+	
+			const formattedMessages = messages.map(m => {
+				if (!m.images || m.images.length === 0) {
+					return { role: m.role, content: m.content };
+				}
+	
+				// OpenAI multi-modal content format
+				const contentParts: any[] = [{ type: "text", text: m.content }];
+				m.images.forEach(img => {
+					contentParts.push({
+						type: "image_url",
+						image_url: {
+							url: `data:${img.mimeType};base64,${img.data}`
+						}
+					});
+				});
+	
+				return { role: m.role, content: contentParts };
+			});
+	
+			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"Authorization": `Bearer ${apiKey}`
+				},
+				body: JSON.stringify({
+					model: model,
+					messages: formattedMessages,
+					stream: true
+				})
+			});
+			if (!response.ok) {
 			const errorData = await response.json().catch(() => ({}));
 			throw new Error(`OpenAI error: ${response.status} ${errorData.error?.message || response.statusText}`);
 		}

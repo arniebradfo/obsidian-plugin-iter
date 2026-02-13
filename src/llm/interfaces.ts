@@ -1,6 +1,12 @@
+export interface ChatImage {
+	data: string; // base64 data
+	mimeType: string;
+}
+
 export interface ChatMessage {
 	role: "system" | "user" | "assistant";
 	content: string;
+	images?: ChatImage[];
 }
 
 export interface LLMProvider {

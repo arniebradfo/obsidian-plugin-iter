@@ -24,10 +24,26 @@ export class AnthropicProvider implements LLMProvider {
 		}
 
 		const systemMessage = messages.find(m => m.role === "system");
-		const chatMessages = messages.filter(m => m.role !== "system").map(m => ({
-			role: m.role,
-			content: m.content
-		}));
+		const chatMessages = messages.filter(m => m.role !== "system").map(m => {
+			if (!m.images || m.images.length === 0) {
+				return { role: m.role, content: m.content };
+			}
+
+			// Anthropic multi-modal content format
+			const contentParts: any[] = [{ type: "text", text: m.content }];
+			m.images.forEach(img => {
+				contentParts.push({
+					type: "image",
+					source: {
+						type: "base64",
+						media_type: img.mimeType,
+						data: img.data
+					}
+				});
+			});
+
+			return { role: m.role, content: contentParts };
+		});
 
 		const postData = JSON.stringify({
 			model: model,

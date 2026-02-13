@@ -21,12 +21,19 @@ export class OllamaProvider implements LLMProvider {
 	}
 
 	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
+		// Ollama wants images as an array of base64 strings in each message
+		const formattedMessages = messages.map(m => ({
+			role: m.role,
+			content: m.content,
+			images: m.images?.map(img => img.data)
+		}));
+
 		const response = await fetch(`${this.settings.ollamaUrl}/api/chat`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				model: model,
-				messages: messages,
+				messages: formattedMessages,
 				stream: true
 			})
 		});

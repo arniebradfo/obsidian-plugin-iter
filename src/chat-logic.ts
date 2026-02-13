@@ -1,6 +1,6 @@
-import { parseYaml, TFile, App, MarkdownView, Notice } from "obsidian";
+import { parseYaml, TFile, App, MarkdownView, Notice, arrayBufferToBase64 } from "obsidian";
 import MyPlugin from "./main";
-import { ChatMessage, LLMProvider } from "./llm/interfaces";
+import { ChatMessage, LLMProvider, ChatImage } from "./llm/interfaces";
 import { OllamaProvider } from "./llm/ollama";
 import { OpenAIProvider } from "./llm/openai";
 import { GeminiProvider } from "./llm/gemini";
@@ -51,7 +51,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 
 	try {
 		const content = await plugin.app.vault.read(file);
-		const messages = parseChatContent(content);
+		const messages = await parseChatContent(plugin.app, content);
 		
 		const activeView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
 		const editor = activeView?.file?.path === file.path ? activeView.editor : null;
@@ -115,27 +115,64 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 	}
 }
 
-export function parseChatContent(content: string): ChatMessage[] {
+export async function parseChatContent(app: App, content: string): Promise<ChatMessage[]> {
 	const messages: ChatMessage[] = [];
 	const parts = content.split(/```iter[\s\S]*?```/);
 	const blocks = content.match(/```iter[\s\S]*?```/g) || [];
 
-	parts.forEach((text, i) => {
-		const block = blocks[i-1];
-		if (!block) return;
+	for (let i = 0; i < parts.length; i++) {
+		const text = parts[i] || "";
+		const block = blocks[i - 1];
+		if (!block) continue;
 		
 		const yaml = block.replace(/```iter|```/g, "").trim();
 		const config = parseYaml(yaml) || {};
 		
 		if (config.role) {
+			const images = await extractImages(app, text);
 			messages.push({
 				role: config.role,
-				content: text.trim()
+				content: text.trim(),
+				images: images.length > 0 ? images : undefined
 			});
 		}
-	});
+	}
 
 	return messages;
+}
+
+async function extractImages(app: App, text: string): Promise<ChatImage[]> {
+	const images: ChatImage[] = [];
+	
+	// 1. Internal Obsidian links: ![[image.png]]
+	const internalRegex = /!\[\[(.*?)\]\]/g;
+	let match;
+	while ((match = internalRegex.exec(text)) !== null) {
+		const link = match[1]?.split("|")[0]; // Handle aliases/sizing
+		if (link) {
+			const file = app.metadataCache.getFirstLinkpathDest(link, "");
+			if (file instanceof TFile) {
+				const data = await app.vault.readBinary(file);
+				images.push({
+					data: arrayBufferToBase64(data),
+					mimeType: getMimeType(file.extension)
+				});
+			}
+		}
+	}
+
+	return images;
+}
+
+function getMimeType(extension: string): string {
+	switch (extension.toLowerCase()) {
+		case "png": return "image/png";
+		case "jpg":
+		case "jpeg": return "image/jpeg";
+		case "gif": return "image/gif";
+		case "webp": return "image/webp";
+		default: return "image/png";
+	}
 }
 
 export function isChatFile(app: App, filePath: string): boolean {

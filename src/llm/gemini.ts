@@ -29,11 +29,24 @@ export class GeminiProvider implements LLMProvider {
 			throw new Error("Gemini API key not found in settings. Please configure it in the plugin settings.");
 		}
 
-		// Google's API uses a different message structure: { role: "user" | "model", parts: [{ text: string }] }
-		const contents = messages.map(m => ({
-			role: m.role === "assistant" ? "model" : "user",
-			parts: [{ text: m.content }]
-		}));
+		// Google's API uses a parts array: { role: "user" | "model", parts: [{ text: string }, { inline_data: { mime_type: string, data: string } }] }
+		const contents = messages.map(m => {
+			const parts: any[] = [{ text: m.content }];
+			
+			m.images?.forEach(img => {
+				parts.push({
+					inline_data: {
+						mime_type: img.mimeType,
+						data: img.data
+					}
+				});
+			});
+
+			return {
+				role: m.role === "assistant" ? "model" : "user",
+				parts: parts
+			};
+		});
 
 		const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`, {
 			method: "POST",
