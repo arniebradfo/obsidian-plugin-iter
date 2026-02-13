@@ -22,15 +22,16 @@
 	.edit-block-button {
 		top: unset;
 		/* make this equal to some variable or something */
-		bottom: 30px;
+		bottom: 0;
+		right: 4px;
 	}
 }
 
 .iter-chat-block {
 	display: flex !important;
 	flex-direction: column;
-	gap: 2px;
-	padding: 2px 0;
+	gap: 4px;
+	padding: 6px 0;
 
 	--radius-chat: var(--radius-l);
 
@@ -73,10 +74,45 @@
 
 .iter-block-header {
 	display: flex;
-	align-items: baseline;
-	gap: 4px;
+	align-items: center;
+	gap: 8px;
 	font-size: var(--font-ui-small);
 }
+
+.iter-info{
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: 1 1;
+}
+
+.iter-controls{
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.iter-role-container {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.iter-spacer {
+	color: var(--text-faint);
+}
+
+.iter-metadata {
+	color: var(--text-muted);
+}
+
+.iter-role {
+	border-radius: 999px;
+	height: 32px;
+	width: 32px;
+	background-color: var(--interactive-normal);
+}
+
 
 /* Persistent Footer - Flowing with content */
 

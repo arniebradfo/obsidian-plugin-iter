@@ -23,34 +23,47 @@ export function registerCodeBlock(plugin: MyPlugin) {
 function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
 	const role = config.role || "user";
 	const isSystem = role === "system";
-	
+
 	const header = container.createDiv({ cls: "iter-block-header" });
-	
+	const info = header.createDiv({ cls: "iter-info" });
+
+	const roleContainer = info.createDiv({cls: "iter-role-container"})
+
 	if (isSystem) {
-		const span = header.createSpan({ 
-			cls: `iter-role-display iter-role-system` 
+		const span = roleContainer.createSpan({
+			cls: `iter-role iter-role-system`
 		});
 		setIcon(span, "shield");
 	} else {
-		const roleToggle = header.createEl("button", { 
-			cls: `iter-role-btn iter-role-${role} clickable-icon` 
+		const roleToggle = roleContainer.createEl("button", {
+			cls: `iter-role iter-role-${role} clickable-icon`
 		});
-		
+
+		const newRole = role === "user" ? "assistant" : "user";
+
 		const iconName = role === "user" ? "user" : "bot";
 		setIcon(roleToggle, iconName);
-		roleToggle.setAttr("aria-label", role.toUpperCase()); 
+		roleToggle.setAttr("aria-label", `Switch to ${newRole}`);
 
 		roleToggle.addEventListener("click", async () => {
-			const newRole = role === "user" ? "assistant" : "user";
 			await toggleRoleInFile(plugin, ctx, newRole, el);
 		});
 	}
 
+	roleContainer.createSpan({
+		cls: `iter-role-label`,
+		text: role.toUpperCase()
+	})
+
+	const spacerChar = "/"
 	if (config.model) {
-		header.createSpan({ text: ` | Model: ${config.model}`, cls: "iter-model-info" });
+		info.createSpan({ text: spacerChar, cls: "iter-spacer" });
+		info.createSpan({ text: config.model, cls: "iter-model-info iter-metadata" });
 	}
-	
-	const trimBtn = header.createEl("button", {
+
+	const controls = header.createDiv({ cls: "iter-controls" });
+
+	const trimBtn = controls.createEl("button", {
 		cls: "iter-trim-btn clickable-icon"
 	});
 	setIcon(trimBtn, "scissors");
@@ -59,7 +72,7 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 		await trimSectionInFile(plugin, ctx, el);
 	});
 
-	const deleteBtn = header.createEl("button", {
+	const deleteBtn = controls.createEl("button", {
 		cls: "iter-delete-btn clickable-icon mod-destructive"
 	});
 	setIcon(deleteBtn, "trash");
@@ -69,6 +82,7 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 		await deleteSectionFromFile(plugin, ctx, el);
 	});
 
+
 }
 
 async function trimSectionInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
@@ -77,7 +91,7 @@ async function trimSectionInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorCon
 
 	const content = await plugin.app.vault.read(file as any);
 	const lines = content.split("\n");
-	
+
 	const section = ctx.getSectionInfo(el);
 	if (!section) return;
 
@@ -91,7 +105,7 @@ async function trimSectionInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorCon
 	}
 
 	const messageLines = lines.slice(section.lineEnd + 1, messageEnd);
-	
+
 	// Trim start
 	while (messageLines.length > 0 && messageLines[0]?.trim() === "") {
 		messageLines.shift();
@@ -117,7 +131,7 @@ async function toggleRoleInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorCont
 
 	const content = await plugin.app.vault.read(file as any);
 	const lines = content.split("\n");
-	
+
 	const section = ctx.getSectionInfo(el);
 	if (section) {
 		lines[section.lineStart + 1] = `role: ${newRole}`;
@@ -131,7 +145,7 @@ async function deleteSectionFromFile(plugin: MyPlugin, ctx: MarkdownPostProcesso
 
 	const content = await plugin.app.vault.read(file as any);
 	const lines = content.split("\n");
-	
+
 	const section = ctx.getSectionInfo(el);
 	if (!section) return;
 
