@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, parseYaml, Notice, setIcon } from "obsidian";
+import { MarkdownPostProcessorContext, parseYaml, Notice, setIcon, TFile } from "obsidian";
 import MyPlugin from "./main";
 import { isChatFile } from "./chat-logic";
 
@@ -14,6 +14,20 @@ export function registerCodeBlock(plugin: MyPlugin) {
 
 			const config = parseYaml(source) || {};
 			el.classList.add("iter-chat-block");
+
+			// Check if this is the first iter block in the file
+			const section = ctx.getSectionInfo(el);
+			if (section) {
+				const activeFile = plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
+				if (activeFile instanceof TFile) {
+					const content = await plugin.app.vault.read(activeFile);
+					const linesBefore = content.split("\n").slice(0, section.lineStart);
+					const isFirst = !linesBefore.some(line => line.trim().startsWith("```iter"));
+					if (isFirst) {
+						el.classList.add("iter-first-block");
+					}
+				}
+			}
 
 			renderMetadataBlock(el, config, plugin, ctx, el);
 		}
