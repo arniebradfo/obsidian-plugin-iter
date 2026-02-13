@@ -79,14 +79,14 @@
 	font-size: var(--font-ui-small);
 }
 
-.iter-info{
+.iter-info {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	flex: 1 1;
 }
 
-.iter-controls{
+.iter-controls {
 	display: flex;
 	align-items: center;
 	gap: 2px;
@@ -111,6 +111,19 @@
 	height: 32px;
 	width: 32px;
 	background-color: var(--interactive-normal);
+
+	/* from .clickable-icon  */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--icon-color);
+	-electron-corner-smoothing: var(--corner-smoothing);
+
+	/* from .clickable-icon  */
+	svg {
+		opacity: var(--icon-opacity);
+		transition: opacity var(--anim-duration-fast) ease-in-out;
+	}
 }
 
 
