@@ -6,8 +6,14 @@
 	}
 
 	/* no border on the top of the first .iter-chat-block */
-	.iter-chat-block.iter-first-block::before {
-		content: '';
+	.iter-chat-block::before {
+		content: none;
+	}
+
+	&~& {
+		.iter-chat-block::before {
+			content: '';
+		}
 	}
 
 	.edit-block-button {
