@@ -1,12 +1,9 @@
 /* Chat Block Styling */
 
 .cm-lang-iter {
-	.edit-block-button {}
-
 	&:hover {
 		box-shadow: none !important;
 	}
-
 
 	/* no border on the top of the first .iter-chat-block */
 	.iter-chat-block::before {
