@@ -49,6 +49,18 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		const activeView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
 		const editor = activeView?.file?.path === file.path ? activeView.editor : null;
 
+		if (editor && activeView) {
+			const lineCount = editor.lineCount();
+			editor.setCursor({ line: lineCount, ch: 0 });
+			editor.focus();
+			
+			// Direct scroll to bottom of the CM6 scroller
+			const scroller = activeView.contentEl.querySelector('.cm-scroller');
+			if (scroller) {
+				scroller.scrollTop = scroller.scrollHeight;
+			}
+		}
+
 		const { provider, actualModel } = getProvider(plugin, selectedModel);
 		const stream = provider.generateStream(messages, actualModel);
 
