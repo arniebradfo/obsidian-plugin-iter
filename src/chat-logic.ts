@@ -142,3 +142,44 @@ export function isChatFile(app: App, filePath: string): boolean {
 	const cache = app.metadataCache.getCache(filePath);
 	return !!cache?.frontmatter?.["iter-chat"];
 }
+
+export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
+	const content = await plugin.app.vault.read(file);
+	const lines = content.split("\n");
+	const newLines: string[] = [];
+	
+	let i = 0;
+	while (i < lines.length) {
+		const line = lines[i]!;
+		
+		if (line.trim().startsWith("```iter")) {
+			newLines.push(line);
+			// Find the start of the next block or end of file
+			let nextBlockIdx = lines.length;
+			for (let j = i + 1; j < lines.length; j++) {
+				if (lines[j]?.trim().startsWith("```iter")) {
+					nextBlockIdx = j;
+					break;
+				}
+			}
+			
+			const messageLines = lines.slice(i + 1, nextBlockIdx);
+			
+			// Trim
+			while (messageLines.length > 0 && messageLines[0]?.trim() === "") {
+				messageLines.shift();
+			}
+			while (messageLines.length > 0 && messageLines[messageLines.length - 1]?.trim() === "") {
+				messageLines.pop();
+			}
+			
+			newLines.push(...messageLines);
+			i = nextBlockIdx; 
+		} else {
+			newLines.push(line);
+			i++;
+		}
+	}
+	
+	await plugin.app.vault.modify(file, newLines.join("\n"));
+}

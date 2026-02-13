@@ -1,6 +1,6 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
-import { executeChat, isChatFile } from "./chat-logic";
+import { executeChat, isChatFile, trimAllMessages } from "./chat-logic";
 import { Notice, MarkdownView, TextComponent, setIcon } from "obsidian";
 import MyPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
@@ -18,7 +18,7 @@ class SubmitButtonWidget extends WidgetType {
 
 		// Left side: Info (Submit + Model)
 		const info = submitContainer.createDiv({ cls: "iter-info" });
-		// Right side: Controls (Add Message)
+		// Right side: Controls (Add Message, Trim All)
 		const controls = submitContainer.createDiv({ cls: "iter-controls" });
 
 		const btn = info.createEl("button", {
@@ -35,6 +35,12 @@ class SubmitButtonWidget extends WidgetType {
 
 		// Attach shared suggest logic
 		new ModelInputSuggest(this.plugin.app, modelInput.inputEl, this.plugin);
+
+		const trimAllBtn = controls.createEl("button", {
+			cls: "iter-footer-btn iter-trim-all-btn clickable-icon"
+		});
+		setIcon(trimAllBtn, "square-scissors");
+		trimAllBtn.setAttr("aria-label", "Trim all messages");
 
 		const addMessageBtn = controls.createEl("button", {
 			cls: "iter-footer-btn iter-add-msg-btn clickable-icon"
@@ -78,6 +84,14 @@ class SubmitButtonWidget extends WidgetType {
 			const lineCount = editor.lineCount();
 			editor.setCursor({ line: lineCount, ch: 0 });
 			editor.focus();
+		});
+
+		trimAllBtn.addEventListener("click", async (e) => {
+			e.preventDefault();
+			const activeFile = this.plugin.app.workspace.getActiveFile();
+			if (!activeFile) return;
+			await trimAllMessages(this.plugin, activeFile);
+			new Notice("All messages trimmed.");
 		});
 
 		return wrapperEl;
