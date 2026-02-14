@@ -1,4 +1,4 @@
-import { parseYaml, TFile, App, MarkdownView, Notice, arrayBufferToBase64 } from "obsidian";
+import { parseYaml, TFile, App, MarkdownView, Notice, arrayBufferToBase64, requestUrl } from "obsidian";
 import MyPlugin from "./main";
 import { ChatMessage, LLMProvider, ChatImage } from "./llm/interfaces";
 import { OllamaProvider } from "./llm/ollama";
@@ -164,6 +164,28 @@ async function extractImages(app: App, text: string): Promise<ChatImage[]> {
 					data: arrayBufferToBase64(data),
 					mimeType: getMimeType(file.extension)
 				});
+			}
+		}
+	}
+
+	// 2. Standard Markdown links with URLs: ![desc](https://...)
+	const urlRegex = /!\[.*?\]\((https?:\/\/.*?)\)/g;
+	while ((match = urlRegex.exec(text)) !== null) {
+		const url = match[1];
+		if (url) {
+			try {
+				const response = await requestUrl({ url: url });
+				if (response.status === 200) {
+					const contentType = response.headers["content-type"] || "image/png";
+					if (contentType.startsWith("image/")) {
+						images.push({
+							data: arrayBufferToBase64(response.arrayBuffer),
+							mimeType: contentType
+						});
+					}
+				}
+			} catch (e) {
+				console.error(`Failed to fetch image from URL: ${url}`, e);
 			}
 		}
 	}
