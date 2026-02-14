@@ -1,4 +1,4 @@
-import { App, Plugin, TFile, Notice, MarkdownView } from 'obsidian';
+import { App, Plugin, TFile, Notice, MarkdownView, Editor } from 'obsidian';
 import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
@@ -49,6 +49,54 @@ export default class MyPlugin extends Plugin {
 							const lineCount = editor.lineCount();
 							editor.setCursor({ line: lineCount, ch: 0 });
 							editor.focus();
+						});
+					}
+					return true;
+				}
+				return false;
+			}
+		});
+
+		this.addCommand({
+			id: 'insert-user-block',
+			name: 'Insert User Message Block',
+			editorCallback: (editor: Editor) => {
+				const block = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+				editor.replaceRange(block, editor.getCursor());
+			}
+		});
+
+		this.addCommand({
+			id: 'insert-assistant-block',
+			name: 'Insert Assistant Message Block',
+			editorCallback: (editor: Editor) => {
+				const block = `\n\n\`\`\`iter\nrole: assistant\n\`\`\`\n`;
+				editor.replaceRange(block, editor.getCursor());
+			}
+		});
+
+		this.addCommand({
+			id: 'insert-system-block-top',
+			name: 'Insert System Message Block (Top)',
+			editorCheckCallback: (checking: boolean, editor: Editor, view: MarkdownView) => {
+				if (view.file && isChatFile(this.app, view.file.path)) {
+					if (!checking) {
+						const block = `\`\`\`iter\nrole: system\n\`\`\`\n${this.settings.systemPrompt}\n\n`;
+						// Insert at the very beginning of the content (after frontmatter if possible)
+						this.app.vault.read(view.file).then(content => {
+							let newContent = content;
+							if (content.startsWith("---")) {
+								const endIdx = content.indexOf("---", 3);
+								if (endIdx !== -1) {
+									const afterFrontmatter = endIdx + 3;
+									newContent = content.slice(0, afterFrontmatter) + "\n\n" + block + content.slice(afterFrontmatter);
+								} else {
+									newContent = block + content;
+								}
+							} else {
+								newContent = block + content;
+							}
+							this.app.vault.modify(view.file!, newContent);
 						});
 					}
 					return true;
