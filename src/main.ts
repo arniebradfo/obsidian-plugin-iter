@@ -110,7 +110,6 @@ export default class MyPlugin extends Plugin {
 		const content = await this.app.vault.read(file);
 		const frontmatter = `---
 iter-chat: true
-model: ${this.settings.defaultModel}
 ---
 
 \`\`\`iter
