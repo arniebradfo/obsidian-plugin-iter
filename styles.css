@@ -5,13 +5,13 @@
 		box-shadow: none !important;
 	}
 
-	/* no border on the top of the first .iter-chat-block */
-	.iter-chat-block::before {
+	/* no border on the top of the first .turn-chat-block */
+	.turn-chat-block::before {
 		content: none;
 	}
 
 	&~& {
-		.iter-chat-block::before {
+		.turn-chat-block::before {
 			content: '';
 		}
 	}
@@ -27,7 +27,7 @@
 	}
 }
 
-.iter-chat-block {
+.turn-chat-block {
 	display: flex !important;
 	flex-direction: column;
 	gap: 4px;
@@ -58,7 +58,7 @@
 
 }
 
-.iter-chat-block-submit {
+.turn-chat-block-submit {
 	gap: 12px;
 
 	&::after {
@@ -71,41 +71,41 @@
 }
 
 
-.iter-block-header {
+.turn-block-header {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	font-size: var(--font-ui-small);
 }
 
-.iter-info {
+.turn-info {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	flex: 1 1;
 }
 
-.iter-controls {
+.turn-controls {
 	display: flex;
 	align-items: center;
 	gap: 2px;
 }
 
-.iter-role-container {
+.turn-role-container {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 }
 
-.iter-spacer {
+.turn-spacer {
 	color: var(--text-faint);
 }
 
-.iter-metadata {
+.turn-metadata {
 	color: var(--text-muted);
 }
 
-.iter-role {
+.turn-role {
 	border-radius: 999px;
 	height: 32px;
 	width: 32px;
@@ -128,7 +128,7 @@
 
 /* Persistent Footer - Flowing with content */
 
-.iter-submit-container {
+.turn-submit-container {
 	width: 100%;
 	display: flex !important;
 	align-items: center;

@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-plugin-iter",
-	"name": "Iter iterator",
+	"id": "obsidian-inline-ai-notebook",
+	"name": "Inline AI Notebook",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "LLM chat in a md file",
+	"description": "An interactive LLM AI chat interface built directly into your Markdown files. Edit prompts and responses as naturally as your notes.",
 	"author": "James Bradford",
 	"authorUrl": "https://bradford.digital",
 	"isDesktopOnly": false

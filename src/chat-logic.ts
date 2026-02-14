@@ -34,8 +34,8 @@ export function getProvider(plugin: MyPlugin, modelString: string): { provider: 
 }
 
 export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: string) {
-	const submitButtons = document.querySelectorAll(".iter-submit-btn");
-	const allButtons = document.querySelectorAll(".iter-footer-btn");
+	const submitButtons = document.querySelectorAll(".turn-submit-btn");
+	const allButtons = document.querySelectorAll(".turn-footer-btn");
 
 	submitButtons.forEach(btn => {
 		if (btn instanceof HTMLButtonElement) {
@@ -73,11 +73,11 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 
 		let isFirstToken = true;
 
-		// 2. Stream the content
+		// Stream the content
 		for await (const chunk of stream) {
 			if (isFirstToken) {
-				// 1. Append the assistant start block ONLY on first token
-				const assistantStart = `\n\n\`\`\`iter\nrole: assistant\nmodel: ${selectedModel}\n\`\`\`\n`;
+				// Append the assistant start block ONLY on first token
+				const assistantStart = `\n\n\`\`\`turn\nrole: assistant\nmodel: ${selectedModel}\n\`\`\`\n`;
 				if (editor) {
 					editor.replaceRange(assistantStart, { line: editor.lineCount(), ch: 0 });
 				} else {
@@ -94,8 +94,8 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		}
 
 		if (!isFirstToken) {
-			// 3. Append the trailing user block ONLY if we actually got a response
-			const userEnd = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+			// Append the trailing user block ONLY if we actually got a response
+			const userEnd = `\n\n\`\`\`turn\nrole: user\n\`\`\`\n`;
 			if (editor) {
 				editor.replaceRange(userEnd, { line: editor.lineCount(), ch: 0 });
 				editor.setCursor({ line: editor.lineCount(), ch: 0 });
@@ -124,15 +124,15 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 
 export async function parseChatContent(app: App, content: string): Promise<ChatMessage[]> {
 	const messages: ChatMessage[] = [];
-	const parts = content.split(/```iter[\s\S]*?```/);
-	const blocks = content.match(/```iter[\s\S]*?```/g) || [];
+	const parts = content.split(/```turn[\s\S]*?```/);
+	const blocks = content.match(/```turn[\s\S]*?```/g) || [];
 
 	for (let i = 0; i < parts.length; i++) {
 		const text = parts[i] || "";
 		const block = blocks[i - 1];
 		if (!block) continue;
 		
-		const yaml = block.replace(/```iter|```/g, "").trim();
+		const yaml = block.replace(/```turn|```/g, "").trim();
 		const config = parseYaml(yaml) || {};
 		
 		if (config.role) {
@@ -151,11 +151,10 @@ export async function parseChatContent(app: App, content: string): Promise<ChatM
 async function extractImages(app: App, text: string): Promise<ChatImage[]> {
 	const images: ChatImage[] = [];
 	
-	// 1. Internal Obsidian links: ![[image.png]]
 	const internalRegex = /!\[\[(.*?)\]\]/g;
 	let match;
 	while ((match = internalRegex.exec(text)) !== null) {
-		const link = match[1]?.split("|")[0]; // Handle aliases/sizing
+		const link = match[1]?.split("|")[0];
 		if (link) {
 			const file = app.metadataCache.getFirstLinkpathDest(link, "");
 			if (file instanceof TFile) {
@@ -168,7 +167,6 @@ async function extractImages(app: App, text: string): Promise<ChatImage[]> {
 		}
 	}
 
-	// 2. Standard Markdown links with URLs: ![desc](https://...)
 	const urlRegex = /!\[.*?\]\((https?:\/\/.*?)\)/g;
 	while ((match = urlRegex.exec(text)) !== null) {
 		const url = match[1];
@@ -206,7 +204,7 @@ function getMimeType(extension: string): string {
 
 export function isChatFile(app: App, filePath: string): boolean {
 	const cache = app.metadataCache.getCache(filePath);
-	return !!cache?.frontmatter?.["iter-chat"];
+	return !!cache?.frontmatter?.["turn-chat"];
 }
 
 export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
@@ -218,12 +216,11 @@ export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
 	while (i < lines.length) {
 		const line = lines[i]!;
 		
-		if (line.trim().startsWith("```iter")) {
+		if (line.trim().startsWith("```turn")) {
 			newLines.push(line);
-			// Find the start of the next block or end of file
 			let nextBlockIdx = lines.length;
 			for (let j = i + 1; j < lines.length; j++) {
-				if (lines[j]?.trim().startsWith("```iter")) {
+				if (lines[j]?.trim().startsWith("```turn")) {
 					nextBlockIdx = j;
 					break;
 				}
@@ -231,7 +228,6 @@ export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
 			
 			const messageLines = lines.slice(i + 1, nextBlockIdx);
 			
-			// Trim
 			while (messageLines.length > 0 && messageLines[0]?.trim() === "") {
 				messageLines.shift();
 			}

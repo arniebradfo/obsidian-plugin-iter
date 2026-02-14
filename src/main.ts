@@ -1,5 +1,5 @@
 import { App, Plugin, TFile, Notice, MarkdownView, Editor } from 'obsidian';
-import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from "./settings";
+import { DEFAULT_SETTINGS, MyPluginSettings, InlineAINotebookSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
 import { executeChat, isChatFile } from "./chat-logic";
@@ -15,11 +15,11 @@ export default class MyPlugin extends Plugin {
 		this.registerEditorExtension(createFooterExtension(this));
 		this.registerEditorSuggest(new ModelSuggest(this.app, this));
 
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new InlineAINotebookSettingTab(this.app, this));
 
 		this.addCommand({
-			id: 'initialize-iter-chat',
-			name: 'Initialize Iter Chat',
+			id: 'initialize-ai-notebook',
+			name: 'Initialize AI Notebook',
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (activeFile) {
@@ -30,7 +30,7 @@ export default class MyPlugin extends Plugin {
 			}
 		});
 
-		this.addRibbonIcon('message-square-plus', 'Initialize Iter Chat', async () => {
+		this.addRibbonIcon('message-square-plus', 'Initialize AI Notebook', async () => {
 			const activeFile = this.app.workspace.getActiveFile();
 			if (activeFile) {
 				await this.initializeChatFile(activeFile);
@@ -40,18 +40,15 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'submit-iter-chat',
-			name: 'Submit Iter Chat',
+			id: 'submit-turn-chat',
+			name: 'Submit to AI',
 			hotkeys: [{ modifiers: ["Mod"], key: "Enter" }],
 			checkCallback: (checking: boolean) => {
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView && activeView.file && isChatFile(this.app, activeView.file.path)) {
 					if (!checking) {
-						// Search specifically within the active view's container
-						const modelInput = activeView.contentEl.querySelector(".iter-model-input") as HTMLInputElement;
+						const modelInput = activeView.contentEl.querySelector(".turn-model-input") as HTMLInputElement;
 						const selectedModel = modelInput?.value || this.settings.defaultModel;
-
-						console.log(`Iter: Submitting chat with model "${selectedModel}" (found via query: ${!!modelInput})`);
 
 						executeChat(this, activeView.file, selectedModel).then(() => {
 							const editor = activeView.editor;
@@ -67,31 +64,30 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'insert-user-block',
+			id: 'insert-user-turn',
 			name: 'Insert User Message Block',
 			editorCallback: (editor: Editor) => {
-				const block = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+				const block = `\n\n\`\`\`turn\nrole: user\n\`\`\`\n`;
 				editor.replaceRange(block, editor.getCursor());
 			}
 		});
 
 		this.addCommand({
-			id: 'insert-assistant-block',
+			id: 'insert-assistant-turn',
 			name: 'Insert Assistant Message Block',
 			editorCallback: (editor: Editor) => {
-				const block = `\n\n\`\`\`iter\nrole: assistant\n\`\`\`\n`;
+				const block = `\n\n\`\`\`turn\nrole: assistant\n\`\`\`\n`;
 				editor.replaceRange(block, editor.getCursor());
 			}
 		});
 
 		this.addCommand({
-			id: 'insert-system-block-top',
+			id: 'insert-system-turn-top',
 			name: 'Insert System Message Block (Top)',
 			editorCheckCallback: (checking: boolean, editor: Editor, view: MarkdownView) => {
 				if (view.file && isChatFile(this.app, view.file.path)) {
 					if (!checking) {
-						const block = `\`\`\`iter\nrole: system\n\`\`\`\n${this.settings.systemPrompt}\n\n`;
-						// Insert at the very beginning of the content (after frontmatter if possible)
+						const block = `\`\`\`turn\nrole: system\n\`\`\`\n${this.settings.systemPrompt}\n\n`;
 						this.app.vault.read(view.file).then(content => {
 							let newContent = content;
 							if (content.startsWith("---")) {
@@ -118,20 +114,20 @@ export default class MyPlugin extends Plugin {
 	async initializeChatFile(file: TFile) {
 		const content = await this.app.vault.read(file);
 		const frontmatter = `---
-iter-chat: true
+turn-chat: true
 ---
 
-\`\`\`iter
+\`\`\`turn
 role: system
 \`\`\`
 ${this.settings.systemPrompt}
 
-\`\`\`iter
+\`\`\`turn
 role: user
 \`\`\`
 `;
 		await this.app.vault.modify(file, frontmatter + "\n" + content);
-		new Notice("Chat initialized!");
+		new Notice("Notebook initialized!");
 	}
 
 	onunload() {

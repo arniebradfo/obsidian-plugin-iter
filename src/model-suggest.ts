@@ -8,9 +8,7 @@ import {
 	TFile,
 } from "obsidian";
 import MyPlugin from "./main";
-import { getProvider } from "./chat-logic";
-import { OllamaProvider } from "./llm/ollama";
-import { OpenAIProvider } from "./llm/openai";
+import { getAllAvailableModels } from "./llm/model-suggest-helper";
 
 export class ModelSuggest extends EditorSuggest<string> {
 	constructor(app: App, private plugin: MyPlugin) {
@@ -37,22 +35,7 @@ export class ModelSuggest extends EditorSuggest<string> {
 	}
 
 	async getSuggestions(context: EditorSuggestContext): Promise<string[]> {
-		const providers = [
-			new OllamaProvider(this.plugin.settings),
-			new OpenAIProvider(this.app, this.plugin.settings)
-		];
-
-		const allModels: string[] = [];
-		
-		for (const provider of providers) {
-			try {
-				const models = await provider.listModels();
-				models.forEach(m => allModels.push(`${provider.id}/${m}`));
-			} catch (e) {
-				console.error(`Failed to list models for ${provider.id}`, e);
-			}
-		}
-
+		const allModels = await getAllAvailableModels(this.app, this.plugin);
 		return allModels.filter(m => 
 			m.toLowerCase().contains(context.query.toLowerCase())
 		);

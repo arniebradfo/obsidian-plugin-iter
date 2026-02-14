@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-inline-ai-notebook",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "An interactive LLM AI chat interface built directly into your Markdown files.",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

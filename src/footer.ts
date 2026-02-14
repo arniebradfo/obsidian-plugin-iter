@@ -12,18 +12,18 @@ class SubmitButtonWidget extends WidgetType {
 
 	toDOM(view: EditorView): HTMLElement {
 		const wrapperEl = document.createElement("div");
-		wrapperEl.classList.add("iter-chat-block", "iter-chat-block-submit");
+		wrapperEl.classList.add("turn-chat-block", "turn-chat-block-submit");
 
-		const submitContainer = wrapperEl.createDiv({ cls: "iter-submit-container" });
+		const submitContainer = wrapperEl.createDiv({ cls: "turn-submit-container" });
 
 		// Left side: Info (Submit + Model)
-		const info = submitContainer.createDiv({ cls: "iter-info" });
+		const info = submitContainer.createDiv({ cls: "turn-info" });
 		// Right side: Controls (Add Message, Trim All)
-		const controls = submitContainer.createDiv({ cls: "iter-controls" });
+		const controls = submitContainer.createDiv({ cls: "turn-controls" });
 
 		const btn = info.createEl("button", {
 			text: "Submit to AI",
-			cls: "iter-footer-btn iter-submit-btn mod-cta"
+			cls: "turn-footer-btn turn-submit-btn mod-cta"
 		});
 
 		// Model Input
@@ -31,19 +31,19 @@ class SubmitButtonWidget extends WidgetType {
 			.setPlaceholder("provider/model")
 			.setValue(this.plugin.settings.defaultModel);
 
-		modelInput.inputEl.addClass("iter-model-input");
+		modelInput.inputEl.addClass("turn-model-input");
 
 		// Attach shared suggest logic
 		new ModelInputSuggest(this.plugin.app, modelInput.inputEl, this.plugin);
 
 		const trimAllBtn = controls.createEl("button", {
-			cls: "iter-footer-btn iter-trim-all-btn clickable-icon"
+			cls: "turn-footer-btn turn-trim-all-btn clickable-icon"
 		});
-		setIcon(trimAllBtn, "square-scissors");
+		setIcon(trimAllBtn, "scissors");
 		trimAllBtn.setAttr("aria-label", "Trim all messages");
 
 		const addMessageBtn = controls.createEl("button", {
-			cls: "iter-footer-btn iter-add-msg-btn clickable-icon"
+			cls: "turn-footer-btn turn-add-msg-btn clickable-icon"
 		});
 		setIcon(addMessageBtn, "user-plus");
 		addMessageBtn.setAttr("aria-label", "Add new message block");
@@ -77,7 +77,7 @@ class SubmitButtonWidget extends WidgetType {
 			if (!activeFile || !markdownView) return;
 
 			const editor = markdownView.editor;
-			const newLine = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+			const newLine = `\n\n\`\`\`turn\nrole: user\n\`\`\`\n`;
 			
 			editor.replaceRange(newLine, { line: editor.lineCount(), ch: 0 });
 			

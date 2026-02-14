@@ -1,11 +1,13 @@
 import { App, PluginSettingTab, Setting, SettingGroup, TextComponent } from "obsidian";
 import MyPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
+import { ModelConfigModal } from "./settings/model-config-modal";
 
 export interface MyPluginSettings {
 	// General
 	systemPrompt: string;
 	defaultModel: string;
+	modelConfig: Record<string, boolean>;
 
 	// Providers
 	ollamaUrl: string;
@@ -14,19 +16,20 @@ export interface MyPluginSettings {
 	geminiApiKeyName: string;
 	azureOpenAiKeyName: string;
 	azureOpenAiEndpoint: string;
-	azureOpenAiModels: string; // New field
+	azureOpenAiModels: string;
 }
 
 export const DEFAULT_SETTINGS: MyPluginSettings = {
 	systemPrompt: 'You are a helpful assistant.',
 	defaultModel: 'llama3',
+	modelConfig: {},
 	ollamaUrl: 'http://localhost:11434',
 	openAiApiKeyName: '',
 	anthropicApiKeyName: '',
 	geminiApiKeyName: '',
 	azureOpenAiKeyName: '',
 	azureOpenAiEndpoint: '',
-	azureOpenAiModels: 'gpt-4o,gpt-35-turbo' // Default examples
+	azureOpenAiModels: 'gpt-4o,gpt-35-turbo'
 }
 
 function addSensitiveSetting(setting: Setting, value: string, onChange: (value: string) => Promise<void>) {
@@ -38,7 +41,7 @@ function addSensitiveSetting(setting: Setting, value: string, onChange: (value: 
 	});
 }
 
-export class SampleSettingTab extends PluginSettingTab {
+export class InlineAINotebookSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
 
 	constructor(app: App, plugin: MyPlugin) {
@@ -49,7 +52,7 @@ export class SampleSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.createEl('h2', { text: 'Iter LLM Settings' });
+		containerEl.createEl('h2', { text: 'Inline AI Notebook Settings' });
 
 		// --- General Group ---
 		new SettingGroup(containerEl)
@@ -77,6 +80,15 @@ export class SampleSettingTab extends PluginSettingTab {
 							});
 						new ModelInputSuggest(this.app, text.inputEl, this.plugin);
 					});
+			})
+			.addSetting((setting: Setting) => {
+				setting.setName('Configure available models')
+					.setDesc('Choose which models appear in the suggestion lists.')
+					.addButton(btn => btn
+						.setButtonText('Configure')
+						.onClick(() => {
+							new ModelConfigModal(this.app, this.plugin).open();
+						}));
 			});
 
 		// --- Ollama Group ---
