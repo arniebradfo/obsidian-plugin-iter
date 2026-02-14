@@ -17,10 +17,13 @@
 	}
 
 	.edit-block-button {
-		top: unset;
-		/* make this equal to some variable or something */
-		bottom: 0;
-		right: 4px;
+		&&& {
+			top: unset;
+			/* make this equal to some variable or something */
+			bottom: 0;
+			right: 4px;
+			border-radius: var(--radius-m);
+		}
 	}
 }
 
@@ -51,7 +54,6 @@
 		border-bottom-color: transparent;
 		border-radius: var(--radius-chat) var(--radius-chat) 0 0;
 		mask-image: linear-gradient(to top, transparent, black);
-
 	}
 
 }
