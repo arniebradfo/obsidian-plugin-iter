@@ -71,16 +71,21 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		const { provider, actualModel } = getProvider(plugin, selectedModel);
 		const stream = provider.generateStream(messages, actualModel);
 
-		// 1. Append the assistant start block with the model recorded
-		const assistantStart = `\n\n\`\`\`iter\nrole: assistant\nmodel: ${selectedModel}\n\`\`\`\n`;
-		if (editor) {
-			editor.replaceRange(assistantStart, { line: editor.lineCount(), ch: 0 });
-		} else {
-			await plugin.app.vault.append(file, assistantStart);
-		}
+		let isFirstToken = true;
 
 		// 2. Stream the content
 		for await (const chunk of stream) {
+			if (isFirstToken) {
+				// 1. Append the assistant start block ONLY on first token
+				const assistantStart = `\n\n\`\`\`iter\nrole: assistant\nmodel: ${selectedModel}\n\`\`\`\n`;
+				if (editor) {
+					editor.replaceRange(assistantStart, { line: editor.lineCount(), ch: 0 });
+				} else {
+					await plugin.app.vault.append(file, assistantStart);
+				}
+				isFirstToken = false;
+			}
+
 			if (editor) {
 				const lineCount = editor.lineCount();
 				const lastLine = editor.getLine(lineCount - 1);
@@ -88,13 +93,15 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 			}
 		}
 
-		// 3. Append the trailing user block
-		const userEnd = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
-		if (editor) {
-			editor.replaceRange(userEnd, { line: editor.lineCount(), ch: 0 });
-			editor.setCursor({ line: editor.lineCount(), ch: 0 });
-		} else {
-			await plugin.app.vault.append(file, userEnd);
+		if (!isFirstToken) {
+			// 3. Append the trailing user block ONLY if we actually got a response
+			const userEnd = `\n\n\`\`\`iter\nrole: user\n\`\`\`\n`;
+			if (editor) {
+				editor.replaceRange(userEnd, { line: editor.lineCount(), ch: 0 });
+				editor.setCursor({ line: editor.lineCount(), ch: 0 });
+			} else {
+				await plugin.app.vault.append(file, userEnd);
+			}
 		}
 
 	} catch (e) {
