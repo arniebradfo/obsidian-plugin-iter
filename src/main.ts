@@ -30,6 +30,15 @@ export default class MyPlugin extends Plugin {
 			}
 		});
 
+		this.addRibbonIcon('message-square-plus', 'Initialize Iter Chat', async () => {
+			const activeFile = this.app.workspace.getActiveFile();
+			if (activeFile) {
+				await this.initializeChatFile(activeFile);
+			} else {
+				new Notice("No active file found.");
+			}
+		});
+
 		this.addCommand({
 			id: 'submit-iter-chat',
 			name: 'Submit Iter Chat',
