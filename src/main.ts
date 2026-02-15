@@ -43,7 +43,7 @@ export default class MyPlugin extends Plugin {
 		this.addCommand({
 			id: 'submit-turn-chat',
 			name: 'Submit to AI',
-			hotkeys: [{ modifiers: ["Mod"], key: "Enter" }],
+			hotkeys: [{ modifiers: ["Mod", "Shift"], key: "Enter" }],
 			checkCallback: (checking: boolean) => {
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView && activeView.file && isChatFile(this.app, activeView.file.path)) {
