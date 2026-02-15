@@ -22,7 +22,7 @@ export class GeminiProvider implements LLMProvider {
 		];
 	}
 
-	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
+	async *generateStream(messages: ChatMessage[], model: string, temperature: number): AsyncGenerator<string, void, unknown> {
 		const apiKey = this.settings.geminiApiKeyName;
 		
 		if (!apiKey) {
@@ -54,7 +54,10 @@ export class GeminiProvider implements LLMProvider {
 				"Content-Type": "application/json"
 			},
 			body: JSON.stringify({
-				contents: contents
+				contents: contents,
+				generationConfig: {
+					temperature: temperature
+				}
 			})
 		});
 

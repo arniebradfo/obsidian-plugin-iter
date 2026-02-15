@@ -16,7 +16,7 @@ export class AnthropicProvider implements LLMProvider {
 		];
 	}
 
-	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
+	async *generateStream(messages: ChatMessage[], model: string, temperature: number): AsyncGenerator<string, void, unknown> {
 		const apiKey = this.settings.anthropicApiKeyName;
 		
 		if (!apiKey) {
@@ -50,7 +50,8 @@ export class AnthropicProvider implements LLMProvider {
 			system: systemMessage?.content,
 			messages: chatMessages,
 			stream: true,
-			max_tokens: 4096
+			max_tokens: 4096,
+			temperature: temperature
 		});
 
 		// Use Node.js https to bypass CORS on Desktop

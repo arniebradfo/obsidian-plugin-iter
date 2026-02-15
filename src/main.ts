@@ -49,9 +49,12 @@ export default class MyPlugin extends Plugin {
 				if (activeView && activeView.file && isChatFile(this.app, activeView.file.path)) {
 					if (!checking) {
 						const modelInput = activeView.contentEl.querySelector(".turn-model-input") as HTMLInputElement;
+						const tempInput = activeView.contentEl.querySelector(".turn-temp-input") as HTMLInputElement;
+						
 						const selectedModel = modelInput?.value || this.settings.defaultModel;
+						const temperature = tempInput ? parseFloat(tempInput.value) : this.settings.defaultTemperature;
 
-						executeChat(this, activeView.file, selectedModel).then(() => {
+						executeChat(this, activeView.file, selectedModel, temperature).then(() => {
 							const editor = activeView.editor;
 							const lineCount = editor.lineCount();
 							editor.setCursor({ line: lineCount, ch: 0 });

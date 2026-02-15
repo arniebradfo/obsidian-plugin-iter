@@ -33,7 +33,7 @@ export function getProvider(plugin: MyPlugin, modelString: string): { provider: 
 	}
 }
 
-export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: string) {
+export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: string, temperature: number) {
 	const submitButtons = document.querySelectorAll(".turn-submit-btn");
 	const allButtons = document.querySelectorAll(".turn-footer-btn");
 
@@ -69,7 +69,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		}
 
 		const { provider, actualModel } = getProvider(plugin, selectedModel);
-		const stream = provider.generateStream(messages, actualModel);
+		const stream = provider.generateStream(messages, actualModel, temperature);
 
 		let isFirstToken = true;
 

@@ -7,6 +7,7 @@ export interface MyPluginSettings {
 	// General
 	systemPrompt: string;
 	defaultModel: string;
+	defaultTemperature: number;
 	modelConfig: Record<string, boolean>;
 
 	// Providers
@@ -22,6 +23,7 @@ export interface MyPluginSettings {
 export const DEFAULT_SETTINGS: MyPluginSettings = {
 	systemPrompt: 'You are a helpful assistant.',
 	defaultModel: 'llama3',
+	defaultTemperature: 0.7,
 	modelConfig: {},
 	ollamaUrl: 'http://localhost:11434',
 	openAiApiKeyName: '',
@@ -79,6 +81,25 @@ export class InlineAINotebookSettingTab extends PluginSettingTab {
 								await this.plugin.saveSettings();
 							});
 						new ModelInputSuggest(this.app, text.inputEl, this.plugin);
+					});
+			})
+			.addSetting((setting: Setting) => {
+				setting.setName('Default Temperature')
+					.setDesc('The fallback creativity level (0.0 to 2.0).')
+					.addText(text => {
+						text.inputEl.type = "number";
+						text.setPlaceholder('0.7')
+							.setValue(this.plugin.settings.defaultTemperature.toString())
+							.onChange(async (value) => {
+								const val = parseFloat(value);
+								if (!isNaN(val)) {
+									this.plugin.settings.defaultTemperature = val;
+									await this.plugin.saveSettings();
+								}
+							});
+						text.inputEl.setAttribute("step", "0.1");
+						text.inputEl.setAttribute("min", "0");
+						text.inputEl.setAttribute("max", "1");
 					});
 			})
 			.addSetting((setting: Setting) => {

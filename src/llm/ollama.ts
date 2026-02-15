@@ -20,7 +20,7 @@ export class OllamaProvider implements LLMProvider {
 		}
 	}
 
-	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
+	async *generateStream(messages: ChatMessage[], model: string, temperature: number): AsyncGenerator<string, void, unknown> {
 		// Ollama wants images as an array of base64 strings in each message
 		const formattedMessages = messages.map(m => ({
 			role: m.role,
@@ -34,7 +34,10 @@ export class OllamaProvider implements LLMProvider {
 			body: JSON.stringify({
 				model: model,
 				messages: formattedMessages,
-				stream: true
+				stream: true,
+				options: {
+					temperature: temperature
+				}
 			})
 		});
 

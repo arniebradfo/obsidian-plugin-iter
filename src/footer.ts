@@ -16,7 +16,7 @@ class SubmitButtonWidget extends WidgetType {
 
 		const submitContainer = wrapperEl.createDiv({ cls: "turn-submit-container" });
 
-		// Left side: Info (Submit + Model)
+		// Left side: Info (Submit + Model + Temp)
 		const info = submitContainer.createDiv({ cls: "turn-info" });
 		// Right side: Controls (Add Message, Trim All)
 		const controls = submitContainer.createDiv({ cls: "turn-controls" });
@@ -36,6 +36,19 @@ class SubmitButtonWidget extends WidgetType {
 		// Attach shared suggest logic
 		new ModelInputSuggest(this.plugin.app, modelInput.inputEl, this.plugin);
 
+		// Temperature Input
+		const tempInput = info.createEl("input", {
+			type: "number",
+			cls: "turn-temp-input",
+			attr: {
+				step: "0.1",
+				min: "0",
+				max: "1",
+				title: "Temperature"
+			}
+		});
+		tempInput.value = this.plugin.settings.defaultTemperature.toString();
+
 		const trimAllBtn = controls.createEl("button", {
 			cls: "turn-footer-btn turn-trim-all-btn clickable-icon"
 		});
@@ -54,9 +67,10 @@ class SubmitButtonWidget extends WidgetType {
 			if (!activeFile) return;
 
 			const selectedModel = modelInput.getValue() || this.plugin.settings.defaultModel;
+			const temperature = parseFloat(tempInput.value) || this.plugin.settings.defaultTemperature;
 
 			try {
-				await executeChat(this.plugin, activeFile, selectedModel);
+				await executeChat(this.plugin, activeFile, selectedModel, temperature);
 
 				const markdownView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 				if (markdownView) {

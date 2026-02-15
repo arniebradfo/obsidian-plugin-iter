@@ -129,8 +129,35 @@
 /* Persistent Footer - Flowing with content */
 
 .turn-submit-container {
+
 	width: 100%;
+
 	display: flex !important;
+
 	align-items: center;
+
 	gap: 16px;
+
+}
+
+
+
+.turn-model-input {
+
+	width: 200px;
+
+	border-radius: 4px;
+
+}
+
+
+
+.turn-temp-input {
+
+	width: 65px;
+
+	text-align: center;
+
+	border-radius: 4px;
+
 }

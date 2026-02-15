@@ -16,7 +16,7 @@ export class AzureOpenAIProvider implements LLMProvider {
 			.filter(m => m.length > 0);
 	}
 
-	async *generateStream(messages: ChatMessage[], model: string): AsyncGenerator<string, void, unknown> {
+	async *generateStream(messages: ChatMessage[], model: string, temperature: number): AsyncGenerator<string, void, unknown> {
 		const apiKey = this.settings.azureOpenAiKeyName;
 		const endpoint = this.settings.azureOpenAiEndpoint;
 		
@@ -24,6 +24,7 @@ export class AzureOpenAIProvider implements LLMProvider {
 			throw new Error("Azure OpenAI Key or Endpoint not found in settings.");
 		}
 
+		// Prepare the URL: https://{resource}.openai.azure.com/openai/deployments/{deployment}/chat/completions?api-version={version}
 		const baseUrl = endpoint.endsWith('/') ? endpoint : `${endpoint}/`;
 		const url = `${baseUrl}openai/deployments/${model}/chat/completions?api-version=2024-02-01`;
 
@@ -53,7 +54,8 @@ export class AzureOpenAIProvider implements LLMProvider {
 			},
 			body: JSON.stringify({
 				messages: formattedMessages,
-				stream: true
+				stream: true,
+				temperature: temperature
 			})
 		});
 
