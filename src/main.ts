@@ -19,24 +19,14 @@ export default class MyPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'initialize-ai-notebook',
-			name: 'Initialize AI Notebook',
+			name: 'New AI Notebook',
 			callback: async () => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (activeFile) {
-					await this.initializeChatFile(activeFile);
-				} else {
-					new Notice("No active file found.");
-				}
+				await this.createNewChatFile();
 			}
 		});
 
-		this.addRibbonIcon('message-square-plus', 'Initialize AI Notebook', async () => {
-			const activeFile = this.app.workspace.getActiveFile();
-			if (activeFile) {
-				await this.initializeChatFile(activeFile);
-			} else {
-				new Notice("No active file found.");
-			}
+		this.addRibbonIcon('message-square-plus', 'New AI Notebook', async () => {
+			await this.createNewChatFile();
 		});
 
 		this.addCommand({
@@ -49,6 +39,8 @@ export default class MyPlugin extends Plugin {
 					if (!checking) {
 						const modelInput = activeView.contentEl.querySelector(".turn-model-input") as HTMLInputElement;
 						const selectedModel = modelInput?.value || this.settings.defaultModel;
+
+						console.log(`Iter: Submitting chat with model "${selectedModel}" (found via query: ${!!modelInput})`);
 
 						executeChat(this, activeView.file, selectedModel).then(() => {
 							const editor = activeView.editor;
@@ -111,9 +103,10 @@ export default class MyPlugin extends Plugin {
 		});
 	}
 
-	async initializeChatFile(file: TFile) {
-		const content = await this.app.vault.read(file);
-		const frontmatter = `---
+	async createNewChatFile() {
+		const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+		const fileName = `AI Notebook ${timestamp}.md`;
+		const content = `---
 turn-chat: true
 ---
 
@@ -126,8 +119,15 @@ ${this.settings.systemPrompt}
 role: user
 \`\`\`
 `;
-		await this.app.vault.modify(file, frontmatter + "\n" + content);
-		new Notice("Notebook initialized!");
+		try {
+			const file = await this.app.vault.create(fileName, content);
+			const leaf = this.app.workspace.getLeaf(true);
+			await leaf.openFile(file);
+			new Notice("New notebook created!");
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : String(e);
+			new Notice("Error creating file: " + msg);
+		}
 	}
 
 	onunload() {
