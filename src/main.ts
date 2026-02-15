@@ -113,7 +113,7 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async createNewChatFile() {
-		const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+		const timestamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", " ").slice(0, 19);
 		const fileName = `AI Notebook ${timestamp}.md`;
 		const content = `---
 turn-chat: true
