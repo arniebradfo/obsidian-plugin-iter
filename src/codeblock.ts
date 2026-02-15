@@ -26,31 +26,54 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	
 	const header = container.createDiv({ cls: "turn-block-header" });
 	
+	// Left side: Info
+	const info = header.createDiv({ cls: "turn-info" });
+	const roleContainer = info.createDiv({ cls: "turn-role-container" });
+
 	if (isSystem) {
-		const span = header.createSpan({ 
-			cls: `turn-role-display turn-role-system` 
+		const span = roleContainer.createSpan({ 
+			cls: `turn-role turn-role-system` 
 		});
 		setIcon(span, "shield");
 	} else {
-		const roleToggle = header.createEl("button", { 
-			cls: `turn-role-btn turn-role-${role} clickable-icon` 
+		const roleToggle = roleContainer.createEl("button", { 
+			cls: `turn-role turn-role-${role} clickable-icon` 
 		});
 		
 		const iconName = role === "user" ? "user" : "bot";
 		setIcon(roleToggle, iconName);
-		roleToggle.setAttr("aria-label", role.toUpperCase()); 
+		
+		const newRole = role === "user" ? "assistant" : "user";
+		roleToggle.setAttr("aria-label", `Switch to ${newRole}`);
 
 		roleToggle.addEventListener("click", async () => {
-			const newRole = role === "user" ? "assistant" : "user";
 			await toggleRoleInFile(plugin, ctx, newRole, el);
 		});
 	}
 
+	roleContainer.createSpan({
+		cls: "turn-role-label",
+		text: role.toUpperCase()
+	});
+
 	if (config.model) {
-		header.createSpan({ text: ` | Model: ${config.model}`, cls: "turn-model-info" });
+		info.createSpan({ text: "/", cls: "turn-spacer" });
+		info.createSpan({ text: config.model, cls: "turn-model-info turn-metadata" });
 	}
 	
-	const deleteBtn = header.createEl("button", {
+	// Right side: Controls
+	const controls = header.createDiv({ cls: "turn-controls" });
+
+	const trimBtn = controls.createEl("button", {
+		cls: "turn-trim-btn clickable-icon"
+	});
+	setIcon(trimBtn, "scissors");
+	trimBtn.setAttr("aria-label", "Trim blank lines");
+	trimBtn.addEventListener("click", async () => {
+		await trimSectionInFile(plugin, ctx, el);
+	});
+
+	const deleteBtn = controls.createEl("button", {
 		cls: "turn-delete-btn clickable-icon mod-destructive"
 	});
 	setIcon(deleteBtn, "trash");
@@ -58,15 +81,6 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 
 	deleteBtn.addEventListener("click", async () => {
 		await deleteSectionFromFile(plugin, ctx, el);
-	});
-
-	const trimBtn = header.createEl("button", {
-		cls: "turn-trim-btn clickable-icon"
-	});
-	setIcon(trimBtn, "scissors");
-	trimBtn.setAttr("aria-label", "Trim blank lines");
-	trimBtn.addEventListener("click", async () => {
-		await trimSectionInFile(plugin, ctx, el);
 	});
 }
 
