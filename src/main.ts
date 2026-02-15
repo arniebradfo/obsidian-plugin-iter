@@ -17,6 +17,17 @@ export default class MyPlugin extends Plugin {
 
 		this.addSettingTab(new InlineAINotebookSettingTab(this.app, this));
 
+		// Listen for metadata changes to trigger re-renders when a file becomes a chat notebook
+		this.registerEvent(
+			this.app.metadataCache.on("changed", (file) => {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView && activeView.file === file) {
+					// Force a re-render of the markdown post-processors
+					activeView.previewMode?.rerender(true);
+				}
+			})
+		);
+
 		this.addCommand({
 			id: 'initialize-ai-notebook',
 			name: 'New AI Notebook',
@@ -39,8 +50,6 @@ export default class MyPlugin extends Plugin {
 					if (!checking) {
 						const modelInput = activeView.contentEl.querySelector(".turn-model-input") as HTMLInputElement;
 						const selectedModel = modelInput?.value || this.settings.defaultModel;
-
-						console.log(`Iter: Submitting chat with model "${selectedModel}" (found via query: ${!!modelInput})`);
 
 						executeChat(this, activeView.file, selectedModel).then(() => {
 							const editor = activeView.editor;
