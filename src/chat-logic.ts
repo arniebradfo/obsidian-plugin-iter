@@ -77,7 +77,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		for await (const chunk of stream) {
 			if (isFirstToken) {
 				// Append the assistant start block ONLY on first token
-				const assistantStart = `\n\n\`\`\`turn\nrole: assistant\nmodel: ${selectedModel}\n\`\`\`\n`;
+				const assistantStart = `\n\n\`\`\`turn\nrole: assistant\nmodel: ${selectedModel}\ntemp: ${temperature}\n\`\`\`\n`;
 				if (editor) {
 					editor.replaceRange(assistantStart, { line: editor.lineCount(), ch: 0 });
 				} else {

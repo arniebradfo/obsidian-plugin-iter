@@ -74,6 +74,7 @@
 .turn-block-header {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 8px;
 	font-size: var(--font-ui-small);
 }
@@ -81,8 +82,9 @@
 .turn-info {
 	display: flex;
 	align-items: center;
-	gap: 6px;
-	flex: 1 1;
+	gap: 8px;
+	flex: 1 1 auto;
+	flex-wrap: wrap;
 }
 
 .turn-controls {
@@ -126,38 +128,31 @@
 }
 
 
-/* Persistent Footer - Flowing with content */
-
 .turn-submit-container {
-
 	width: 100%;
-
 	display: flex !important;
-
 	align-items: center;
-
 	gap: 16px;
-
 }
-
-
 
 .turn-model-input {
-
 	width: 200px;
-
 	border-radius: 4px;
-
 }
 
+.turn-temp-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
 
+.turn-temp-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
 
 .turn-temp-input {
-
-	width: 65px;
-
+	width: 40px;
 	text-align: center;
-
 	border-radius: 4px;
-
 }

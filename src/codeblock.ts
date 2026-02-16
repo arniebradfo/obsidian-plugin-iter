@@ -60,6 +60,11 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 		info.createSpan({ text: "/", cls: "turn-spacer" });
 		info.createSpan({ text: config.model, cls: "turn-model-info turn-metadata" });
 	}
+
+	if (config.temp !== undefined) {
+		info.createSpan({ text: "/", cls: "turn-spacer" });
+		info.createSpan({ text: `T: ${config.temp}`, cls: "turn-temp-info turn-metadata" });
+	}
 	
 	// Right side: Controls
 	const controls = header.createDiv({ cls: "turn-controls" });

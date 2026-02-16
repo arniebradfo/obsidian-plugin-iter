@@ -37,7 +37,9 @@ class SubmitButtonWidget extends WidgetType {
 		new ModelInputSuggest(this.plugin.app, modelInput.inputEl, this.plugin);
 
 		// Temperature Input
-		const tempInput = info.createEl("input", {
+		const tempWrapper = info.createDiv({ cls: "turn-temp-wrapper" });
+		tempWrapper.createSpan({ text: "Temp:", cls: "turn-temp-label" });
+		const tempInput = tempWrapper.createEl("input", {
 			type: "number",
 			cls: "turn-temp-input",
 			attr: {
