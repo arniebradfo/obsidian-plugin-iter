@@ -54,7 +54,7 @@ class SubmitButtonWidget extends WidgetType {
 		const trimAllBtn = controls.createEl("button", {
 			cls: "turn-footer-btn turn-trim-all-btn clickable-icon"
 		});
-		setIcon(trimAllBtn, "scissors");
+		setIcon(trimAllBtn, "scissors-square");
 		trimAllBtn.setAttr("aria-label", "Trim all messages");
 
 		const addMessageBtn = controls.createEl("button", {
