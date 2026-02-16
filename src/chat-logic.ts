@@ -151,10 +151,11 @@ export async function parseChatContent(app: App, content: string): Promise<ChatM
 async function extractImages(app: App, text: string): Promise<ChatImage[]> {
 	const images: ChatImage[] = [];
 	
+	// 1. Internal Obsidian links: ![[image.png]]
 	const internalRegex = /!\[\[(.*?)\]\]/g;
 	let match;
 	while ((match = internalRegex.exec(text)) !== null) {
-		const link = match[1]?.split("|")[0];
+		const link = match[1]?.split("|")[0]; // Handle aliases/sizing
 		if (link) {
 			const file = app.metadataCache.getFirstLinkpathDest(link, "");
 			if (file instanceof TFile) {
@@ -167,6 +168,7 @@ async function extractImages(app: App, text: string): Promise<ChatImage[]> {
 		}
 	}
 
+	// 2. Standard Markdown links with URLs: ![desc](https://...)
 	const urlRegex = /!\[.*?\]\((https?:\/\/.*?)\)/g;
 	while ((match = urlRegex.exec(text)) !== null) {
 		const url = match[1];
@@ -202,9 +204,8 @@ function getMimeType(extension: string): string {
 	}
 }
 
-export function isChatFile(app: App, filePath: string): boolean {
-	const cache = app.metadataCache.getCache(filePath);
-	return !!cache?.frontmatter?.["turn-chat"];
+export function hasTurnBlocks(content: string): boolean {
+	return content.includes("```turn");
 }
 
 export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
@@ -228,6 +229,7 @@ export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
 			
 			const messageLines = lines.slice(i + 1, nextBlockIdx);
 			
+			// Trim
 			while (messageLines.length > 0 && messageLines[0]?.trim() === "") {
 				messageLines.shift();
 			}

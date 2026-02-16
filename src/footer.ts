@@ -1,6 +1,6 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
-import { executeChat, isChatFile, trimAllMessages } from "./chat-logic";
+import { executeChat, hasTurnBlocks, trimAllMessages } from "./chat-logic";
 import { Notice, MarkdownView, TextComponent, setIcon } from "obsidian";
 import MyPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
@@ -123,7 +123,10 @@ export function createFooterExtension(plugin: MyPlugin): Extension {
 		},
 		update(value, tr) {
 			const activeFile = plugin.app.workspace.getActiveFile();
-			if (!activeFile || !isChatFile(plugin.app, activeFile.path)) {
+			if (!activeFile) return Decoration.none;
+
+			const content = tr.state.doc.toString();
+			if (!hasTurnBlocks(content)) {
 				return Decoration.none;
 			}
 

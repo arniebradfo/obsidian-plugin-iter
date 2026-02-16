@@ -1,17 +1,11 @@
 import { MarkdownPostProcessorContext, parseYaml, Notice, setIcon } from "obsidian";
 import MyPlugin from "./main";
-import { isChatFile, trimAllMessages } from "./chat-logic";
+import { trimAllMessages } from "./chat-logic";
 
 export function registerCodeBlock(plugin: MyPlugin) {
 	plugin.registerMarkdownCodeBlockProcessor(
 		"turn",
 		async (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-			if (!isChatFile(plugin.app, ctx.sourcePath)) {
-				const pre = el.createEl("pre");
-				pre.createEl("code", { text: "```turn\n" + source + "\n```" });
-				return;
-			}
-
 			const config = parseYaml(source) || {};
 			el.classList.add("turn-chat-block");
 
