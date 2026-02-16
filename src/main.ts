@@ -112,7 +112,10 @@ export default class MyPlugin extends Plugin {
 
 	async createNewChatFile() {
 		const timestamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", " ").slice(0, 19);
+		const folderPath = this.settings.notebookFolder.trim() || "/";
 		const fileName = `AI Chat Notebook ${timestamp}.md`;
+		const filePath = folderPath === "/" ? fileName : `${folderPath}/${fileName}`;
+
 		const content = `\n\`\`\`turn
 role: system
 \`\`\`
@@ -123,7 +126,12 @@ role: user
 \`\`\`
 `;
 		try {
-			const file = await this.app.vault.create(fileName, content);
+			// Ensure folder exists
+			if (folderPath !== "/" && !(await this.app.vault.adapter.exists(folderPath))) {
+				await this.app.vault.createFolder(folderPath);
+			}
+
+			const file = await this.app.vault.create(filePath, content);
 			const leaf = this.app.workspace.getLeaf(true);
 			await leaf.openFile(file);
 			

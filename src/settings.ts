@@ -8,6 +8,7 @@ export interface MyPluginSettings {
 	systemPrompt: string;
 	defaultModel: string;
 	defaultTemperature: number;
+	notebookFolder: string;
 	modelConfig: Record<string, boolean>;
 
 	// Providers
@@ -24,6 +25,7 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	systemPrompt: 'You are a helpful assistant.',
 	defaultModel: 'llama3',
 	defaultTemperature: 0.7,
+	notebookFolder: 'AI Chat Notebooks',
 	modelConfig: {},
 	ollamaUrl: 'http://localhost:11434',
 	openAiApiKeyName: '',
@@ -101,6 +103,17 @@ export class InlineAIChatNotebookSettingTab extends PluginSettingTab {
 						text.inputEl.setAttribute("min", "0");
 						text.inputEl.setAttribute("max", "1");
 					});
+			})
+			.addSetting((setting: Setting) => {
+				setting.setName('Notebook Folder')
+					.setDesc('The folder where new chat notebooks will be created.')
+					.addText(text => text
+						.setPlaceholder('AI Chat Notebooks')
+						.setValue(this.plugin.settings.notebookFolder)
+						.onChange(async (value) => {
+							this.plugin.settings.notebookFolder = value;
+							await this.plugin.saveSettings();
+						}));
 			})
 			.addSetting((setting: Setting) => {
 				setting.setName('Configure available models')
