@@ -43,7 +43,7 @@ function addSensitiveSetting(setting: Setting, value: string, onChange: (value: 
 	});
 }
 
-export class InlineAINotebookSettingTab extends PluginSettingTab {
+export class InlineAIChatNotebookSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
 
 	constructor(app: App, plugin: MyPlugin) {
@@ -54,7 +54,7 @@ export class InlineAINotebookSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.createEl('h2', { text: 'Inline AI Notebook Settings' });
+		containerEl.createEl('h2', { text: 'Inline AI Chat Notebook Settings' });
 
 		// --- General Group ---
 		new SettingGroup(containerEl)
@@ -85,7 +85,7 @@ export class InlineAINotebookSettingTab extends PluginSettingTab {
 			})
 			.addSetting((setting: Setting) => {
 				setting.setName('Default Temperature')
-					.setDesc('The fallback creativity level (0.0 to 2.0).')
+					.setDesc('The fallback creativity level (0.0 to 1.0).')
 					.addText(text => {
 						text.inputEl.type = "number";
 						text.setPlaceholder('0.7')

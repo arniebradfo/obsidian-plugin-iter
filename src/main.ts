@@ -1,5 +1,5 @@
 import { App, Plugin, TFile, Notice, MarkdownView, Editor } from 'obsidian';
-import { DEFAULT_SETTINGS, MyPluginSettings, InlineAINotebookSettingTab } from "./settings";
+import { DEFAULT_SETTINGS, MyPluginSettings, InlineAIChatNotebookSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
 import { executeChat, hasTurnBlocks } from "./chat-logic";
@@ -15,17 +15,17 @@ export default class MyPlugin extends Plugin {
 		this.registerEditorExtension(createFooterExtension(this));
 		this.registerEditorSuggest(new ModelSuggest(this.app, this));
 
-		this.addSettingTab(new InlineAINotebookSettingTab(this.app, this));
+		this.addSettingTab(new InlineAIChatNotebookSettingTab(this.app, this));
 
 		this.addCommand({
 			id: 'initialize-ai-notebook',
-			name: 'New AI Notebook',
+			name: 'New AI Chat Notebook',
 			callback: async () => {
 				await this.createNewChatFile();
 			}
 		});
 
-		this.addRibbonIcon('message-square-plus', 'New AI Notebook', async () => {
+		this.addRibbonIcon('message-square-plus', 'New AI Chat Notebook', async () => {
 			await this.createNewChatFile();
 		});
 
@@ -112,7 +112,7 @@ export default class MyPlugin extends Plugin {
 
 	async createNewChatFile() {
 		const timestamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", " ").slice(0, 19);
-		const fileName = `AI Notebook ${timestamp}.md`;
+		const fileName = `AI Chat Notebook ${timestamp}.md`;
 		const content = `\n\`\`\`turn
 role: system
 \`\`\`
@@ -136,7 +136,7 @@ role: user
 				editor.focus();
 			}
 			
-			new Notice("New notebook created!");
+			new Notice("New chat notebook created!");
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : String(e);
 			new Notice("Error creating file: " + msg);

@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-inline-ai-notebook",
-	"name": "Inline AI Notebook",
+	"id": "obsidian-inline-ai-chat-notebook",
+	"name": "Inline AI Chat Notebook",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "An interactive LLM AI chat interface built directly into your Markdown files. Edit prompts and responses as naturally as your notes.",
+	"description": "An interactive AI chat interface built directly into your Markdown files. Edit prompts and responses as naturally as your notes.",
 	"author": "James Bradford",
-	"authorUrl": "https://bradford.digital",
+	"authorUrl": "https://bradfo.rd",
 	"isDesktopOnly": false
 }
