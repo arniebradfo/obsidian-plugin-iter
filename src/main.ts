@@ -1,4 +1,4 @@
-import { App, Plugin, TFile, Notice, MarkdownView, Editor } from 'obsidian';
+import { App, Plugin, TFile, Notice, MarkdownView, Editor, TFolder } from 'obsidian';
 import { DEFAULT_SETTINGS, MyPluginSettings, InlineAIChatNotebookSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
@@ -36,7 +36,6 @@ export default class MyPlugin extends Plugin {
 			checkCallback: (checking: boolean) => {
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView && activeView.file) {
-					// Check if file content has turn blocks
 					const editor = activeView.editor;
 					const content = editor.getValue();
 					
@@ -111,9 +110,38 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async createNewChatFile() {
-		const timestamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", " ").slice(0, 19);
 		const folderPath = this.settings.notebookFolder.trim() || "/";
-		const fileName = `AI Chat Notebook ${timestamp}.md`;
+		const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+		
+		// Ensure folder exists
+		if (folderPath !== "/" && !(await this.app.vault.adapter.exists(folderPath))) {
+			await this.app.vault.createFolder(folderPath);
+		}
+
+		// Find next incrementing number for today
+		let nextNum = 1;
+		const folder = this.app.vault.getAbstractFileByPath(folderPath);
+		if (folder instanceof TFolder) {
+			const todayPrefix = `Chat ${dateStr}`;
+			const existingNums = folder.children
+				.filter((f: any) => f.name.startsWith(todayPrefix))
+				.map((f: any) => {
+					// Expected format: "Chat YYYY-MM-DD NN.md"
+					const parts = f.name.split(" ");
+					if (parts.length >= 3) {
+						const lastPart = parts[parts.length - 1].replace(".md", "");
+						return parseInt(lastPart);
+					}
+					return NaN;
+				})
+				.filter((n: number) => !isNaN(n));
+			
+			if (existingNums.length > 0) {
+				nextNum = Math.max(...existingNums) + 1;
+			}
+		}
+
+		const fileName = `Chat ${dateStr} ${nextNum.toString().padStart(2, '0')}.md`;
 		const filePath = folderPath === "/" ? fileName : `${folderPath}/${fileName}`;
 
 		const content = `\n\`\`\`turn
@@ -126,11 +154,6 @@ role: user
 \`\`\`
 `;
 		try {
-			// Ensure folder exists
-			if (folderPath !== "/" && !(await this.app.vault.adapter.exists(folderPath))) {
-				await this.app.vault.createFolder(folderPath);
-			}
-
 			const file = await this.app.vault.create(filePath, content);
 			const leaf = this.app.workspace.getLeaf(true);
 			await leaf.openFile(file);
@@ -144,7 +167,7 @@ role: user
 				editor.focus();
 			}
 			
-			new Notice("New chat notebook created!");
+			new Notice("New chat created!");
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : String(e);
 			new Notice("Error creating file: " + msg);
