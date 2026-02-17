@@ -1,23 +1,22 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
 import { executeChat, hasTurnBlocks, trimAllMessages, handleAutoRename, parseChatContent, getProvider, abortChat } from "./chat-logic";
-import { Notice, MarkdownView, TextComponent, setIcon, App, Hotkey } from "obsidian";
-import MyPlugin from "./main";
+import { Notice, MarkdownView, TextComponent, setIcon, App } from "obsidian";
+import InlineAIChatNotebookPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
 import { SUBMIT_COMMAND_ID } from "./utils/constants";
 
-function getHotkeySummary(plugin: MyPlugin, commandId: string): string {
+function getHotkeySummary(plugin: InlineAIChatNotebookPlugin, commandId: string): string {
 	const fullId = `${plugin.manifest.id}:${commandId}`;
 	const app = plugin.app as any;
-	const defaultText = "Submit to AI"
 	
 	const command = app.commands?.commands?.[fullId];
-	if (!command) return defaultText;
+	if (!command) return "Submit to AI";
 
 	// Prefer custom keys if they exist, otherwise fallback to defaults
-	const hotkey: Hotkey = app.hotkeyManager?.customKeys?.[fullId]?.[0] as Hotkey ?? command.hotkeys?.[0] as Hotkey;
+	const hotkey = app.hotkeyManager?.customKeys?.[fullId]?.[0] ?? command.hotkeys?.[0];
 	
-	if (!hotkey) return defaultText;
+	if (!hotkey) return "Submit to AI";
 
 	const modifiers = hotkey.modifiers
 		.map((m: string) => m.replace("Mod", "Ctrl/Cmd"))
@@ -27,7 +26,7 @@ function getHotkeySummary(plugin: MyPlugin, commandId: string): string {
 }
 
 class SubmitButtonWidget extends WidgetType {
-	constructor(readonly plugin: MyPlugin) {
+	constructor(readonly plugin: InlineAIChatNotebookPlugin) {
 		super();
 	}
 
@@ -181,7 +180,7 @@ class SubmitButtonWidget extends WidgetType {
 	eq(other: SubmitButtonWidget) { return true; }
 }
 
-export function createFooterExtension(plugin: MyPlugin): Extension {
+export function createFooterExtension(plugin: InlineAIChatNotebookPlugin): Extension {
 	return StateField.define<DecorationSet>({
 		create(state) {
 			return Decoration.none;

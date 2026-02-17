@@ -6,5 +6,5 @@
 	"description": "An interactive AI chat interface built directly into your Markdown files. Edit prompts and responses as naturally as your notes.",
 	"author": "James Bradford",
 	"authorUrl": "https://bradfo.rd",
-	"isDesktopOnly": false
+	"isDesktopOnly": true
 }

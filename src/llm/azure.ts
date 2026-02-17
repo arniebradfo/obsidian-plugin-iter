@@ -1,12 +1,12 @@
 import { App } from "obsidian";
 import { LLMProvider, ChatMessage } from "./interfaces";
-import { MyPluginSettings } from "../settings";
+import { InlineAIChatNotebookSettings } from "../settings";
 
 export class AzureOpenAIProvider implements LLMProvider {
 	id = "azure";
 	name = "Azure OpenAI";
 
-	constructor(private app: App, private settings: MyPluginSettings) {}
+	constructor(private app: App, private settings: InlineAIChatNotebookSettings) {}
 
 	async listModels(): Promise<string[]> {
 		const models = this.settings.azureOpenAiModels.split(",").map(m => m.trim()).filter(m => m);

@@ -1,12 +1,12 @@
 import { requestUrl } from "obsidian";
 import { LLMProvider, ChatMessage } from "./interfaces";
-import { MyPluginSettings } from "../settings";
+import { InlineAIChatNotebookSettings } from "../settings";
 
 export class OllamaProvider implements LLMProvider {
 	id = "ollama";
 	name = "Ollama";
 
-	constructor(private settings: MyPluginSettings) {}
+	constructor(private settings: InlineAIChatNotebookSettings) {}
 
 	async listModels(): Promise<string[]> {
 		try {

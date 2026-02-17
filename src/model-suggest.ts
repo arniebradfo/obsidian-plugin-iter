@@ -7,11 +7,11 @@ import {
 	EditorSuggestTriggerInfo,
 	TFile,
 } from "obsidian";
-import MyPlugin from "./main";
+import InlineAIChatNotebookPlugin from "./main";
 import { getAllAvailableModels } from "./llm/model-suggest-helper";
 
 export class ModelSuggest extends EditorSuggest<string> {
-	constructor(app: App, private plugin: MyPlugin) {
+	constructor(app: App, private plugin: InlineAIChatNotebookPlugin) {
 		super(app);
 	}
 
@@ -21,14 +21,14 @@ export class ModelSuggest extends EditorSuggest<string> {
 		file: TFile
 	): EditorSuggestTriggerInfo | null {
 		const line = editor.getLine(cursor.line);
-		const trigger = "model: ";
-		
-		if (line.includes(trigger)) {
-			const start = line.indexOf(trigger) + trigger.length;
+		const sub = line.substring(0, cursor.ch);
+		const match = sub.match(/model:\s*([^\s]*)$/);
+
+		if (match && match[1] !== undefined) {
 			return {
-				start: { line: cursor.line, ch: start },
+				start: { line: cursor.line, ch: match.index! + match[0].indexOf(match[1]) },
 				end: cursor,
-				query: line.substring(start),
+				query: match[1],
 			};
 		}
 		return null;
@@ -36,8 +36,8 @@ export class ModelSuggest extends EditorSuggest<string> {
 
 	async getSuggestions(context: EditorSuggestContext): Promise<string[]> {
 		const allModels = await getAllAvailableModels(this.app, this.plugin);
-		return allModels.filter(m => 
-			m.toLowerCase().contains(context.query.toLowerCase())
+		return allModels.filter((m) =>
+			m.toLowerCase().includes(context.query.toLowerCase())
 		);
 	}
 
@@ -46,9 +46,11 @@ export class ModelSuggest extends EditorSuggest<string> {
 	}
 
 	selectSuggestion(value: string, evt: MouseEvent | KeyboardEvent): void {
-		if (this.context) {
-			const { editor, start, end } = this.context;
-			editor.replaceRange(value, start, end);
-		}
+		if (!this.context) return;
+		this.context.editor.replaceRange(
+			value,
+			this.context.start,
+			this.context.end
+		);
 	}
 }

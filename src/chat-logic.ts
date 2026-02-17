@@ -1,5 +1,5 @@
 import { parseYaml, TFile, App, MarkdownView, Notice, arrayBufferToBase64, requestUrl } from "obsidian";
-import MyPlugin from "./main";
+import InlineAIChatNotebookPlugin from "./main";
 import { ChatMessage, LLMProvider, ChatImage } from "./llm/interfaces";
 import { getProvider } from "./llm/provider-factory";
 import { TURN_BLOCK_START } from "./utils/constants";
@@ -20,7 +20,7 @@ export function abortChat(file: TFile) {
 	}
 }
 
-export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: string, temperature: number) {
+export async function executeChat(plugin: InlineAIChatNotebookPlugin, file: TFile, selectedModel: string, temperature: number) {
 	if (isChatActive(file)) {
 		abortChat(file);
 		return;
@@ -138,7 +138,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 	}
 }
 
-export async function handleAutoRename(plugin: MyPlugin, file: TFile, history: ChatMessage[], provider: LLMProvider, model: string) {
+export async function handleAutoRename(plugin: InlineAIChatNotebookPlugin, file: TFile, history: ChatMessage[], provider: LLMProvider, model: string) {
 	// Add a request for a 6-word summary
 	const summaryRequest: ChatMessage = {
 		role: "user",
@@ -263,7 +263,7 @@ export function hasTurnBlocks(content: string): boolean {
 	return content.includes(TURN_BLOCK_START);
 }
 
-export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
+export async function trimAllMessages(plugin: InlineAIChatNotebookPlugin, file: TFile) {
 	const content = await plugin.app.vault.read(file);
 	const lines = content.split("\n");
 	const newLines: string[] = [];

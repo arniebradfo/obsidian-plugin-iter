@@ -1,9 +1,9 @@
 import { MarkdownPostProcessorContext, parseYaml, Notice, setIcon, TFile, MarkdownView } from "obsidian";
-import MyPlugin from "./main";
+import InlineAIChatNotebookPlugin from "./main";
 import { trimAllMessages } from "./chat-logic";
 import { TURN_BLOCK_START } from "./utils/constants";
 
-export function registerCodeBlock(plugin: MyPlugin) {
+export function registerCodeBlock(plugin: InlineAIChatNotebookPlugin) {
 	plugin.registerMarkdownCodeBlockProcessor(
 		"turn",
 		async (source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
@@ -15,7 +15,7 @@ export function registerCodeBlock(plugin: MyPlugin) {
 	);
 }
 
-function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
+function renderMetadataBlock(container: HTMLElement, config: any, plugin: InlineAIChatNotebookPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
 	const role = config.role || "user";
 	const isSystem = role === "system";
 	
@@ -84,7 +84,7 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	});
 }
 
-async function getFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext): Promise<TFile | null> {
+async function getFile(plugin: InlineAIChatNotebookPlugin, ctx: MarkdownPostProcessorContext): Promise<TFile | null> {
 	// Try the context path first
 	const file = plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
 	if (file instanceof TFile) return file;
@@ -97,7 +97,7 @@ async function getFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext): Pro
 	return null;
 }
 
-async function toggleRoleInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, newRole: string, el: HTMLElement) {
+async function toggleRoleInFile(plugin: InlineAIChatNotebookPlugin, ctx: MarkdownPostProcessorContext, newRole: string, el: HTMLElement) {
 	const file = await getFile(plugin, ctx);
 	if (!file) return;
 
@@ -111,7 +111,7 @@ async function toggleRoleInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorCont
 	}
 }
 
-async function deleteSectionFromFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
+async function deleteSectionFromFile(plugin: InlineAIChatNotebookPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
 	const file = await getFile(plugin, ctx);
 	if (!file) return;
 
@@ -133,7 +133,7 @@ async function deleteSectionFromFile(plugin: MyPlugin, ctx: MarkdownPostProcesso
 	await plugin.app.vault.modify(file, lines.join("\n"));
 }
 
-async function trimSectionInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
+async function trimSectionInFile(plugin: InlineAIChatNotebookPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
 	const file = await getFile(plugin, ctx);
 	if (!file) return;
 

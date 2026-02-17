@@ -1,12 +1,12 @@
 import { App } from "obsidian";
 import { LLMProvider, ChatMessage } from "./interfaces";
-import { MyPluginSettings } from "../settings";
+import { InlineAIChatNotebookSettings } from "../settings";
 
 export class GeminiProvider implements LLMProvider {
 	id = "gemini";
 	name = "Gemini";
 
-	constructor(private app: App, private settings: MyPluginSettings) {}
+	constructor(private app: App, private settings: InlineAIChatNotebookSettings) {}
 
 	async listModels(): Promise<string[]> {
 		return [

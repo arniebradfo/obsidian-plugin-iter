@@ -1,5 +1,5 @@
 import { App, Plugin, TFile, Notice, MarkdownView, Editor, TFolder } from 'obsidian';
-import { DEFAULT_SETTINGS, MyPluginSettings, InlineAIChatNotebookSettingTab } from "./settings";
+import { DEFAULT_SETTINGS, InlineAIChatNotebookSettings, InlineAIChatNotebookSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
 import { executeChat, hasTurnBlocks, handleAutoRename, parseChatContent } from "./chat-logic";
@@ -7,8 +7,8 @@ import { getProvider } from "./llm/provider-factory";
 import { ModelSuggest } from "./model-suggest";
 import { TURN_BLOCK_START, SUBMIT_COMMAND_ID } from "./utils/constants";
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class InlineAIChatNotebookPlugin extends Plugin {
+	settings: InlineAIChatNotebookSettings;
 
 	async onload() {
 		await this.loadSettings();
@@ -47,7 +47,7 @@ export default class MyPlugin extends Plugin {
 	registerCommands() {
 		this.addCommand({
 			id: 'rename-chat-summary',
-			name: 'Rename Chat from Summary',
+			name: 'Rename chat from summary',
 			checkCallback: (checking: boolean) => {
 				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 				if (activeView && activeView.file) {
@@ -72,7 +72,7 @@ export default class MyPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'initialize-ai-notebook',
-			name: 'New AI Chat Notebook',
+			name: 'New AI chat notebook',
 			callback: async () => {
 				await this.createNewChatFile();
 			}
@@ -111,7 +111,7 @@ export default class MyPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'insert-user-turn',
-			name: 'Insert User Message Block',
+			name: 'Insert user message block',
 			editorCallback: (editor: Editor) => {
 				const block = `\n\n${TURN_BLOCK_START}\nrole: user\n\`\`\`\n`;
 				editor.replaceRange(block, editor.getCursor());
@@ -120,7 +120,7 @@ export default class MyPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'insert-assistant-turn',
-			name: 'Insert Assistant Message Block',
+			name: 'Insert assistant message block',
 			editorCallback: (editor: Editor) => {
 				const block = `\n\n${TURN_BLOCK_START}\nrole: assistant\n\`\`\`\n`;
 				editor.replaceRange(block, editor.getCursor());
@@ -129,7 +129,7 @@ export default class MyPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'insert-system-turn-top',
-			name: 'Insert System Message Block (Top)',
+			name: 'Insert system message block (top)',
 			editorCheckCallback: (checking: boolean, editor: Editor, view: MarkdownView) => {
 				if (view.file) {
 					const content = editor.getValue();
@@ -159,7 +159,7 @@ export default class MyPlugin extends Plugin {
 	}
 
 	registerRibbonIcons() {
-		this.addRibbonIcon('message-square-plus', 'New AI Chat Notebook', async () => {
+		this.addRibbonIcon('message-square-plus', 'New AI chat notebook', async () => {
 			await this.createNewChatFile();
 		});
 	}
