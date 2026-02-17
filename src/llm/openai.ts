@@ -93,31 +93,26 @@ export class OpenAIProvider implements LLMProvider {
 
 		
 
+				const isReasoningModel = model.startsWith("o1") || model.startsWith("o3") || model.startsWith("o4");
+
+				const body: any = {
+					model: model,
+					messages: formattedMessages,
+					stream: true
+				};
+
+				if (!isReasoningModel) {
+					body.temperature = temperature;
+				}
+
 				const response = await fetch("https://api.openai.com/v1/chat/completions", {
-
 					method: "POST",
-
 					headers: {
-
 						"Content-Type": "application/json",
-
 						"Authorization": `Bearer ${apiKey}`
-
 					},
-
-					body: JSON.stringify({
-
-						model: model,
-
-						messages: formattedMessages,
-
-						stream: true,
-
-						temperature: temperature
-
-					}),
+					body: JSON.stringify(body),
 					signal: signal
-
 				});
 
 		
