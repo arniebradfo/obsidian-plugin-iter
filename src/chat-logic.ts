@@ -183,11 +183,16 @@ export async function parseChatContent(app: App, content: string): Promise<ChatM
 		
 		if (config.role) {
 			const images = await extractImages(app, text);
-			messages.push({
-				role: config.role,
-				content: text.trim(),
-				images: images.length > 0 ? images : undefined
-			});
+			const trimmedContent = text.trim();
+
+			// Only add message if it has content OR images
+			if (trimmedContent !== "" || images.length > 0) {
+				messages.push({
+					role: config.role,
+					content: trimmedContent,
+					images: images.length > 0 ? images : undefined
+				});
+			}
 		}
 	}
 
