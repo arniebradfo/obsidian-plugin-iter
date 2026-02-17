@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-inline-ai-chat-notebook",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "An interactive LLM AI chat interface built directly into your Markdown files.",
 	"main": "main.js",
 	"type": "module",
