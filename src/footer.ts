@@ -1,19 +1,28 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
 import { executeChat, hasTurnBlocks, trimAllMessages, handleAutoRename, parseChatContent, getProvider, abortChat } from "./chat-logic";
-import { Notice, MarkdownView, TextComponent, setIcon } from "obsidian";
+import { Notice, MarkdownView, TextComponent, setIcon, App, Hotkey } from "obsidian";
 import MyPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
 import { SUBMIT_COMMAND_ID } from "./utils/constants";
 
 function getHotkeySummary(plugin: MyPlugin, commandId: string): string {
-	const command = (plugin.app as any).commands?.commands?.[commandId];
-	const hotkey = command?.hotkeys?.[0];
-	if (!hotkey) return "Submit to AI";
+	const fullId = `${plugin.manifest.id}:${commandId}`;
+	const app = plugin.app as any;
+	const defaultText = "Submit to AI"
+	
+	const command = app.commands?.commands?.[fullId];
+	if (!command) return defaultText;
+
+	// Prefer custom keys if they exist, otherwise fallback to defaults
+	const hotkey: Hotkey = app.hotkeyManager?.customKeys?.[fullId]?.[0] as Hotkey ?? command.hotkeys?.[0] as Hotkey;
+	
+	if (!hotkey) return defaultText;
 
 	const modifiers = hotkey.modifiers
 		.map((m: string) => m.replace("Mod", "Ctrl/Cmd"))
 		.join("+");
+		
 	return `Submit (${modifiers}+${hotkey.key})`;
 }
 
@@ -33,7 +42,7 @@ class SubmitButtonWidget extends WidgetType {
 		// Right side: Controls (Add Message, Trim All, Rename, STOP)
 		const controls = submitContainer.createDiv({ cls: "turn-controls" });
 
-		const hotkeyText = getHotkeySummary(this.plugin, `${this.plugin.manifest.id}:${SUBMIT_COMMAND_ID}`);
+		const hotkeyText = getHotkeySummary(this.plugin, SUBMIT_COMMAND_ID);
 
 		const btn = info.createEl("button", {
 			text: "Submit to AI",
