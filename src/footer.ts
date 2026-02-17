@@ -1,6 +1,6 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
-import { executeChat, hasTurnBlocks, trimAllMessages } from "./chat-logic";
+import { executeChat, hasTurnBlocks, trimAllMessages, handleAutoRename, parseChatContent, getProvider } from "./chat-logic";
 import { Notice, MarkdownView, TextComponent, setIcon } from "obsidian";
 import MyPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
@@ -18,7 +18,7 @@ class SubmitButtonWidget extends WidgetType {
 
 		// Left side: Info (Submit + Model + Temp)
 		const info = submitContainer.createDiv({ cls: "turn-info" });
-		// Right side: Controls (Add Message, Trim All)
+		// Right side: Controls (Add Message, Trim All, Rename)
 		const controls = submitContainer.createDiv({ cls: "turn-controls" });
 
 		const btn = info.createEl("button", {
@@ -51,10 +51,16 @@ class SubmitButtonWidget extends WidgetType {
 		});
 		tempInput.value = this.plugin.settings.defaultTemperature.toString();
 
+		const renameBtn = controls.createEl("button", {
+			cls: "turn-footer-btn turn-rename-btn clickable-icon"
+		});
+		setIcon(renameBtn, "file-type-corner");
+		renameBtn.setAttr("aria-label", "Rename chat from summary");
+
 		const trimAllBtn = controls.createEl("button", {
 			cls: "turn-footer-btn turn-trim-all-btn clickable-icon"
 		});
-		setIcon(trimAllBtn, "scissors-square");
+		setIcon(trimAllBtn, "scissors");
 		trimAllBtn.setAttr("aria-label", "Trim all messages");
 
 		const addMessageBtn = controls.createEl("button", {
@@ -108,6 +114,25 @@ class SubmitButtonWidget extends WidgetType {
 			if (!activeFile) return;
 			await trimAllMessages(this.plugin, activeFile);
 			new Notice("All messages trimmed.");
+		});
+
+		renameBtn.addEventListener("click", async (e) => {
+			e.preventDefault();
+			const activeFile = this.plugin.app.workspace.getActiveFile();
+			if (!activeFile) return;
+
+			const selectedModel = modelInput.getValue() || this.plugin.settings.defaultModel;
+			const { provider, actualModel } = getProvider(this.plugin, selectedModel);
+			const content = view.state.doc.toString();
+
+			try {
+				const history = await parseChatContent(this.plugin.app, content);
+				new Notice("Summarizing and renaming...");
+				await handleAutoRename(this.plugin, activeFile, history, provider, actualModel);
+			} catch (e) {
+				const msg = e instanceof Error ? e.message : String(e);
+				new Notice("Rename failed: " + msg);
+			}
 		});
 
 		return wrapperEl;

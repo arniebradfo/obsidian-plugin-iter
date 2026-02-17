@@ -9,6 +9,7 @@ export interface MyPluginSettings {
 	defaultModel: string;
 	defaultTemperature: number;
 	notebookFolder: string;
+	autoRename: boolean;
 	modelConfig: Record<string, boolean>;
 
 	// Providers
@@ -26,6 +27,7 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	defaultModel: 'llama3',
 	defaultTemperature: 0.7,
 	notebookFolder: 'AI Chat Notebooks',
+	autoRename: true,
 	modelConfig: {},
 	ollamaUrl: 'http://localhost:11434',
 	openAiApiKeyName: '',
@@ -112,6 +114,16 @@ export class InlineAIChatNotebookSettingTab extends PluginSettingTab {
 						.setValue(this.plugin.settings.notebookFolder)
 						.onChange(async (value) => {
 							this.plugin.settings.notebookFolder = value;
+							await this.plugin.saveSettings();
+						}));
+			})
+			.addSetting((setting: Setting) => {
+				setting.setName('Auto-Rename Chats')
+					.setDesc('Automatically rename chat files after the second assistant response based on a summary.')
+					.addToggle(toggle => toggle
+						.setValue(this.plugin.settings.autoRename)
+						.onChange(async (value) => {
+							this.plugin.settings.autoRename = value;
 							await this.plugin.saveSettings();
 						}));
 			})

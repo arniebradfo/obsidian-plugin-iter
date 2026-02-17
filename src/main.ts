@@ -2,7 +2,7 @@ import { App, Plugin, TFile, Notice, MarkdownView, Editor, TFolder } from 'obsid
 import { DEFAULT_SETTINGS, MyPluginSettings, InlineAIChatNotebookSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
-import { executeChat, hasTurnBlocks } from "./chat-logic";
+import { executeChat, hasTurnBlocks, handleAutoRename, parseChatContent, getProvider } from "./chat-logic";
 import { ModelSuggest } from "./model-suggest";
 
 export default class MyPlugin extends Plugin {
@@ -16,6 +16,52 @@ export default class MyPlugin extends Plugin {
 		this.registerEditorSuggest(new ModelSuggest(this.app, this));
 
 		this.addSettingTab(new InlineAIChatNotebookSettingTab(this.app, this));
+
+		// Force re-render when file is renamed or changed to keep contexts fresh
+		this.registerEvent(
+			this.app.vault.on("rename", (file) => {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView && activeView.file === file) {
+					// @ts-ignore
+					activeView.previewMode?.rerender(true);
+				}
+			})
+		);
+
+		this.registerEvent(
+			this.app.metadataCache.on("changed", (file) => {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView && activeView.file === file) {
+					// @ts-ignore
+					activeView.previewMode?.rerender(true);
+				}
+			})
+		);
+
+		this.addCommand({
+			id: 'rename-chat-summary',
+			name: 'Rename Chat from Summary',
+			checkCallback: (checking: boolean) => {
+				const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+				if (activeView && activeView.file) {
+					const content = activeView.editor.getValue();
+					if (hasTurnBlocks(content)) {
+						if (!checking) {
+							const modelInput = activeView.contentEl.querySelector(".turn-model-input") as HTMLInputElement;
+							const selectedModel = modelInput?.value || this.settings.defaultModel;
+							const { provider, actualModel } = getProvider(this, selectedModel);
+							
+							parseChatContent(this.app, content).then(history => {
+								new Notice("Summarizing and renaming...");
+								handleAutoRename(this, activeView.file!, history, provider, actualModel);
+							});
+						}
+						return true;
+					}
+				}
+				return false;
+			}
+		});
 
 		this.addCommand({
 			id: 'initialize-ai-notebook',
@@ -122,13 +168,13 @@ export default class MyPlugin extends Plugin {
 		let nextNum = 1;
 		const folder = this.app.vault.getAbstractFileByPath(folderPath);
 		if (folder instanceof TFolder) {
-			const todayPrefix = `Chat ${dateStr}`;
+			const todayPrefix = `Chat - ${dateStr}`;
 			const existingNums = folder.children
 				.filter((f: any) => f.name.startsWith(todayPrefix))
 				.map((f: any) => {
-					// Expected format: "Chat YYYY-MM-DD NN.md"
+					// Expected format: "Chat - YYYY-MM-DD N.md"
 					const parts = f.name.split(" ");
-					if (parts.length >= 3) {
+					if (parts.length >= 4) {
 						const lastPart = parts[parts.length - 1].replace(".md", "");
 						return parseInt(lastPart);
 					}
@@ -141,7 +187,7 @@ export default class MyPlugin extends Plugin {
 			}
 		}
 
-		const fileName = `Chat ${dateStr} ${nextNum.toString().padStart(2, '0')}.md`;
+		const fileName = `Chat - ${dateStr} ${nextNum}.md`;
 		const filePath = folderPath === "/" ? fileName : `${folderPath}/${fileName}`;
 
 		const content = `\n\`\`\`turn

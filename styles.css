@@ -6,14 +6,8 @@
 	}
 
 	/* no border on the top of the first .turn-chat-block */
-	.turn-chat-block::before {
+	.turn-chat-block:has(.turn-role-system)::before {
 		content: none;
-	}
-
-	&~& {
-		.turn-chat-block::before {
-			content: '';
-		}
 	}
 
 	.edit-block-button {

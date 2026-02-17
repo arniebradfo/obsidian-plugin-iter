@@ -1,4 +1,4 @@
-import { MarkdownPostProcessorContext, parseYaml, Notice, setIcon } from "obsidian";
+import { MarkdownPostProcessorContext, parseYaml, Notice, setIcon, TFile, MarkdownView } from "obsidian";
 import MyPlugin from "./main";
 import { trimAllMessages } from "./chat-logic";
 
@@ -83,25 +83,38 @@ function renderMetadataBlock(container: HTMLElement, config: any, plugin: MyPlug
 	});
 }
 
-async function toggleRoleInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, newRole: string, el: HTMLElement) {
+async function getFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext): Promise<TFile | null> {
+	// Try the context path first
 	const file = plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
-	if (!file || !("extension" in file)) return;
+	if (file instanceof TFile) return file;
 
-	const content = await plugin.app.vault.read(file as any);
+	// Fallback: If rename happened, the ctx.sourcePath might be stale.
+	// Since the user is interacting with an element in the active view, the active view's file is likely correct.
+	const activeView = plugin.app.workspace.getActiveViewOfType(MarkdownView);
+	if (activeView && activeView.file) return activeView.file;
+
+	return null;
+}
+
+async function toggleRoleInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, newRole: string, el: HTMLElement) {
+	const file = await getFile(plugin, ctx);
+	if (!file) return;
+
+	const content = await plugin.app.vault.read(file);
 	const lines = content.split("\n");
 	
 	const section = ctx.getSectionInfo(el);
 	if (section) {
 		lines[section.lineStart + 1] = `role: ${newRole}`;
-		await plugin.app.vault.modify(file as any, lines.join("\n"));
+		await plugin.app.vault.modify(file, lines.join("\n"));
 	}
 }
 
 async function deleteSectionFromFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
-	const file = plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
-	if (!file || !("extension" in file)) return;
+	const file = await getFile(plugin, ctx);
+	if (!file) return;
 
-	const content = await plugin.app.vault.read(file as any);
+	const content = await plugin.app.vault.read(file);
 	const lines = content.split("\n");
 	
 	const section = ctx.getSectionInfo(el);
@@ -116,14 +129,14 @@ async function deleteSectionFromFile(plugin: MyPlugin, ctx: MarkdownPostProcesso
 	}
 
 	lines.splice(section.lineStart, deleteUntil - section.lineStart);
-	await plugin.app.vault.modify(file as any, lines.join("\n"));
+	await plugin.app.vault.modify(file, lines.join("\n"));
 }
 
 async function trimSectionInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorContext, el: HTMLElement) {
-	const file = plugin.app.vault.getAbstractFileByPath(ctx.sourcePath);
-	if (!file || !("extension" in file)) return;
+	const file = await getFile(plugin, ctx);
+	if (!file) return;
 
-	const content = await plugin.app.vault.read(file as any);
+	const content = await plugin.app.vault.read(file);
 	const lines = content.split("\n");
 	
 	const section = ctx.getSectionInfo(el);
@@ -152,5 +165,5 @@ async function trimSectionInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorCon
 		...lines.slice(messageEnd)
 	];
 
-	await plugin.app.vault.modify(file as any, newLines.join("\n"));
+	await plugin.app.vault.modify(file, newLines.join("\n"));
 }

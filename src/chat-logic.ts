@@ -102,6 +102,18 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 			} else {
 				await plugin.app.vault.append(file, userEnd);
 			}
+
+			// Handle Auto-Rename after second assistant message
+			const assistantMessageCount = messages.filter(m => m.role === "assistant").length;
+			// assistantMessageCount is 1 if this was the second response (previous history had 1)
+			if (plugin.settings.autoRename && assistantMessageCount === 1) {
+				// Only rename if it matches the default format: "Chat - YYYY-MM-DD N"
+				const defaultPattern = /^Chat - \d{4}-\d{2}-\d{2} \d+$/;
+				const currentName = file.basename;
+				if (defaultPattern.test(currentName)) {
+					await handleAutoRename(plugin, file, messages, provider, actualModel);
+				}
+			}
 		}
 
 	} catch (e) {
@@ -119,6 +131,40 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 				btn.disabled = false;
 			}
 		});
+	}
+}
+
+export async function handleAutoRename(plugin: MyPlugin, file: TFile, history: ChatMessage[], provider: LLMProvider, model: string) {
+	// Add a request for a 6-word summary
+	const summaryRequest: ChatMessage = {
+		role: "user",
+		content: "Please provide a very brief summary of this conversation in about 6 words or less. Do not include any other text, just the summary. No quotes."
+	};
+
+	try {
+		const stream = provider.generateStream([...history, summaryRequest], model, 0.3);
+		let summary = "";
+		for await (const chunk of stream) {
+			summary += chunk;
+		}
+
+		summary = summary.trim()
+			.replace(/[\\/:*?"<>|]/g, "") // Sanitize for filename
+			.replace(/\n/g, " ")
+			.slice(0, 100); // Reasonable limit
+
+		if (summary) {
+			const newName = `Chat - ${summary}.md`;
+			const folderPath = file.parent?.path || "";
+			const newPath = folderPath === "" ? newName : `${folderPath}/${newName}`;
+			
+			// Check if file exists to avoid conflict
+			if (!(await plugin.app.vault.adapter.exists(newPath))) {
+				await plugin.app.fileManager.renameFile(file, newPath);
+			}
+		}
+	} catch (e) {
+		console.error("Auto-rename failed", e);
 	}
 }
 
@@ -229,7 +275,6 @@ export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
 			
 			const messageLines = lines.slice(i + 1, nextBlockIdx);
 			
-			// Trim
 			while (messageLines.length > 0 && messageLines[0]?.trim() === "") {
 				messageLines.shift();
 			}
