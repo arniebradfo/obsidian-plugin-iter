@@ -11,11 +11,14 @@ export class OllamaProvider implements LLMProvider {
 	async listModels(): Promise<string[]> {
 		try {
 			const response = await fetch(`${this.settings.ollamaUrl}/api/tags`);
-			if (!response.ok) return [];
+			if (!response.ok) {
+				console.warn(`Ollama listModels failed: ${response.status} ${response.statusText}`);
+				return [];
+			}
 			const data = await response.json();
 			return data.models?.map((m: any) => m.name) || [];
 		} catch (e) {
-			console.error("Failed to list Ollama models", e);
+			console.warn("Ollama is not running or unreachable at " + this.settings.ollamaUrl);
 			return [];
 		}
 	}
