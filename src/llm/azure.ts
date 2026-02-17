@@ -9,24 +9,18 @@ export class AzureOpenAIProvider implements LLMProvider {
 	constructor(private app: App, private settings: MyPluginSettings) {}
 
 	async listModels(): Promise<string[]> {
-		if (!this.settings.azureOpenAiModels) return [];
-		return this.settings.azureOpenAiModels
-			.split(',')
-			.map(m => m.trim())
-			.filter(m => m.length > 0);
+		const models = this.settings.azureOpenAiModels.split(",").map(m => m.trim()).filter(m => m);
+		return models;
 	}
 
-	async *generateStream(messages: ChatMessage[], model: string, temperature: number): AsyncGenerator<string, void, unknown> {
+	async *generateStream(messages: ChatMessage[], model: string, temperature: number, signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
 		const apiKey = this.settings.azureOpenAiKeyName;
-		const endpoint = this.settings.azureOpenAiEndpoint;
-		
-		if (!apiKey || !endpoint) {
-			throw new Error("Azure OpenAI Key or Endpoint not found in settings.");
-		}
+		const endpoint = this.settings.azureOpenAiEndpoint.replace(/\/$/, "");
+		const apiVersion = "2024-02-01";
 
-		// Prepare the URL: https://{resource}.openai.azure.com/openai/deployments/{deployment}/chat/completions?api-version={version}
-		const baseUrl = endpoint.endsWith('/') ? endpoint : `${endpoint}/`;
-		const url = `${baseUrl}openai/deployments/${model}/chat/completions?api-version=2024-02-01`;
+		if (!apiKey || !endpoint) {
+			throw new Error("Azure OpenAI API key or endpoint not found in settings.");
+		}
 
 		const formattedMessages = messages.map(m => {
 			if (!m.images || m.images.length === 0) {
@@ -46,6 +40,8 @@ export class AzureOpenAIProvider implements LLMProvider {
 			return { role: m.role, content: contentParts };
 		});
 
+		const url = `${endpoint}/openai/deployments/${model}/chat/completions?api-version=${apiVersion}`;
+
 		const response = await fetch(url, {
 			method: "POST",
 			headers: {
@@ -56,12 +52,13 @@ export class AzureOpenAIProvider implements LLMProvider {
 				messages: formattedMessages,
 				stream: true,
 				temperature: temperature
-			})
+			}),
+			signal: signal
 		});
 
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({}));
-			throw new Error(`Azure OpenAI error: ${response.status} ${errorData.error?.message || response.statusText}`);
+			throw new Error(`Azure error: ${response.status} ${errorData.error?.message || response.statusText}`);
 		}
 
 		const reader = response.body?.getReader();
@@ -80,7 +77,7 @@ export class AzureOpenAIProvider implements LLMProvider {
 				for (const line of lines) {
 					const trimmedLine = line.trim();
 					if (!trimmedLine || trimmedLine === "data: [DONE]") continue;
-					
+
 					if (trimmedLine.startsWith("data: ")) {
 						try {
 							const json = JSON.parse(trimmedLine.substring(6));
@@ -89,7 +86,7 @@ export class AzureOpenAIProvider implements LLMProvider {
 								yield content;
 							}
 						} catch (e) {
-							// SSE parsing error
+							console.error("Error parsing Azure SSE chunk", e);
 						}
 					}
 				}

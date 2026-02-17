@@ -1,6 +1,6 @@
 import { WidgetType, EditorView, Decoration, DecorationSet } from "@codemirror/view";
 import { StateField, Extension } from "@codemirror/state";
-import { executeChat, hasTurnBlocks, trimAllMessages, handleAutoRename, parseChatContent, getProvider } from "./chat-logic";
+import { executeChat, hasTurnBlocks, trimAllMessages, handleAutoRename, parseChatContent, getProvider, abortChat } from "./chat-logic";
 import { Notice, MarkdownView, TextComponent, setIcon } from "obsidian";
 import MyPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
@@ -25,6 +25,12 @@ class SubmitButtonWidget extends WidgetType {
 			text: "Submit to AI",
 			cls: "turn-footer-btn turn-submit-btn mod-cta"
 		});
+
+		const stopBtn = info.createEl("button", {
+			text: "STOP",
+			cls: "turn-footer-btn turn-stop-btn mod-destructive"
+		});
+		stopBtn.style.display = "none";
 
 		// Model Input
 		const modelInput = new TextComponent(info)
@@ -54,7 +60,7 @@ class SubmitButtonWidget extends WidgetType {
 		const renameBtn = controls.createEl("button", {
 			cls: "turn-footer-btn turn-rename-btn clickable-icon"
 		});
-		setIcon(renameBtn, "file-type-corner");
+		setIcon(renameBtn, "typewriter");
 		renameBtn.setAttr("aria-label", "Rename chat from summary");
 
 		const trimAllBtn = controls.createEl("button", {
@@ -92,6 +98,14 @@ class SubmitButtonWidget extends WidgetType {
 			}
 		});
 
+		stopBtn.addEventListener("click", async (e) => {
+			e.preventDefault();
+			const activeFile = this.plugin.app.workspace.getActiveFile();
+			if (activeFile) {
+				abortChat(activeFile);
+			}
+		});
+
 		addMessageBtn.addEventListener("click", async (e) => {
 			e.preventDefault();
 			const activeFile = this.plugin.app.workspace.getActiveFile();
@@ -122,7 +136,7 @@ class SubmitButtonWidget extends WidgetType {
 			if (!activeFile) return;
 
 			const selectedModel = modelInput.getValue() || this.plugin.settings.defaultModel;
-			const { provider, actualModel } = getProvider(this.plugin, selectedModel);
+			const { provider, actualModel } = getProvider(this.plugin.app, this.plugin.settings, selectedModel);
 			const content = view.state.doc.toString();
 
 			try {

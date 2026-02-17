@@ -16,7 +16,7 @@ export class AnthropicProvider implements LLMProvider {
 		];
 	}
 
-	async *generateStream(messages: ChatMessage[], model: string, temperature: number): AsyncGenerator<string, void, unknown> {
+	async *generateStream(messages: ChatMessage[], model: string, temperature: number, signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
 		const apiKey = this.settings.anthropicApiKeyName;
 		
 		if (!apiKey) {
@@ -81,6 +81,13 @@ export class AnthropicProvider implements LLMProvider {
 					resolve(res);
 				}
 			});
+
+			if (signal) {
+				signal.addEventListener('abort', () => {
+					req.destroy();
+				});
+			}
+
 			req.on('error', reject);
 			req.write(postData);
 			req.end();

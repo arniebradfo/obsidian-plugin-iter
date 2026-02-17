@@ -4,21 +4,44 @@ import { ChatMessage, LLMProvider, ChatImage } from "./llm/interfaces";
 import { getProvider } from "./llm/provider-factory";
 import { TURN_BLOCK_START } from "./utils/constants";
 
-export { getProvider }; // Re-export for convenience
+export { getProvider };
+
+const activeControllers = new Map<string, AbortController>();
+
+export function isChatActive(file: TFile): boolean {
+	return activeControllers.has(file.path);
+}
+
+export function abortChat(file: TFile) {
+	const controller = activeControllers.get(file.path);
+	if (controller) {
+		controller.abort();
+		activeControllers.delete(file.path);
+	}
+}
 
 export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: string, temperature: number) {
+	if (isChatActive(file)) {
+		abortChat(file);
+		return;
+	}
+
+	const controller = new AbortController();
+	activeControllers.set(file.path, controller);
+
 	const submitButtons = document.querySelectorAll(".turn-submit-btn");
+	const stopButtons = document.querySelectorAll(".turn-stop-btn");
 	const allButtons = document.querySelectorAll(".turn-footer-btn");
 
 	submitButtons.forEach(btn => {
 		if (btn instanceof HTMLButtonElement) {
-			btn.innerText = "Thinking...";
+			btn.style.display = "none";
 		}
 	});
 
-	allButtons.forEach(btn => {
+	stopButtons.forEach(btn => {
 		if (btn instanceof HTMLButtonElement) {
-			btn.disabled = true;
+			btn.style.display = "flex";
 		}
 	});
 
@@ -42,7 +65,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		}
 
 		const { provider, actualModel } = getProvider(plugin.app, plugin.settings, selectedModel);
-		const stream = provider.generateStream(messages, actualModel, temperature);
+		const stream = provider.generateStream(messages, actualModel, temperature, controller.signal);
 
 		let isFirstToken = true;
 
@@ -90,18 +113,25 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		}
 
 	} catch (e) {
-		new Notice("Chat Error: " + (e instanceof Error ? e.message : String(e)));
-		console.error(e);
+		const isAbort = (e instanceof Error && (e.name === 'AbortError' || e.message?.includes('aborted')));
+		if (isAbort) {
+			new Notice("Chat stopped.");
+		} else {
+			new Notice("Chat Error: " + (e instanceof Error ? e.message : String(e)));
+			console.error(e);
+		}
 	} finally {
+		activeControllers.delete(file.path);
+		
 		submitButtons.forEach(btn => {
 			if (btn instanceof HTMLButtonElement) {
-				btn.innerText = "Submit to AI";
+				btn.style.display = "flex";
 			}
 		});
 
-		allButtons.forEach(btn => {
+		stopButtons.forEach(btn => {
 			if (btn instanceof HTMLButtonElement) {
-				btn.disabled = false;
+				btn.style.display = "none";
 			}
 		});
 	}

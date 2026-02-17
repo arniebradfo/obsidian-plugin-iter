@@ -41,7 +41,7 @@ export class OpenAIProvider implements LLMProvider {
 		];
 	}
 
-			async *generateStream(messages: ChatMessage[], model: string, temperature: number): AsyncGenerator<string, void, unknown> {
+			async *generateStream(messages: ChatMessage[], model: string, temperature: number, signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
 
 				const apiKey = this.settings.openAiApiKeyName;
 
@@ -115,7 +115,8 @@ export class OpenAIProvider implements LLMProvider {
 
 						temperature: temperature
 
-					})
+					}),
+					signal: signal
 
 				});
 

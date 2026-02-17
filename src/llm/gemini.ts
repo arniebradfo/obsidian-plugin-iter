@@ -4,7 +4,7 @@ import { MyPluginSettings } from "../settings";
 
 export class GeminiProvider implements LLMProvider {
 	id = "gemini";
-	name = "Google Gemini";
+	name = "Gemini";
 
 	constructor(private app: App, private settings: MyPluginSettings) {}
 
@@ -22,33 +22,35 @@ export class GeminiProvider implements LLMProvider {
 		];
 	}
 
-	async *generateStream(messages: ChatMessage[], model: string, temperature: number): AsyncGenerator<string, void, unknown> {
+	async *generateStream(messages: ChatMessage[], model: string, temperature: number, signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
 		const apiKey = this.settings.geminiApiKeyName;
 		
 		if (!apiKey) {
-			throw new Error("Gemini API key not found in settings. Please configure it in the plugin settings.");
+			throw new Error("Gemini API key not found in settings.");
 		}
 
-		// Google's API uses a parts array: { role: "user" | "model", parts: [{ text: string }, { inline_data: { mime_type: string, data: string } }] }
+		// Gemini format
 		const contents = messages.map(m => {
+			const role = m.role === "assistant" ? "model" : "user";
 			const parts: any[] = [{ text: m.content }];
 			
-			m.images?.forEach(img => {
-				parts.push({
-					inline_data: {
-						mime_type: img.mimeType,
-						data: img.data
-					}
+			if (m.images) {
+				m.images.forEach(img => {
+					parts.push({
+						inline_data: {
+							mime_type: img.mimeType,
+							data: img.data
+						}
+					});
 				});
-			});
+			}
 
-			return {
-				role: m.role === "assistant" ? "model" : "user",
-				parts: parts
-			};
+			return { role, parts };
 		});
 
-		const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`, {
+		const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`;
+
+		const response = await fetch(url, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"
@@ -58,7 +60,8 @@ export class GeminiProvider implements LLMProvider {
 				generationConfig: {
 					temperature: temperature
 				}
-			})
+			}),
+			signal: signal
 		});
 
 		if (!response.ok) {
@@ -82,7 +85,7 @@ export class GeminiProvider implements LLMProvider {
 				for (const line of lines) {
 					const trimmedLine = line.trim();
 					if (!trimmedLine) continue;
-					
+
 					if (trimmedLine.startsWith("data: ")) {
 						try {
 							const json = JSON.parse(trimmedLine.substring(6));
