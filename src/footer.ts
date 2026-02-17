@@ -4,6 +4,18 @@ import { executeChat, hasTurnBlocks, trimAllMessages, handleAutoRename, parseCha
 import { Notice, MarkdownView, TextComponent, setIcon } from "obsidian";
 import MyPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
+import { SUBMIT_COMMAND_ID } from "./utils/constants";
+
+function getHotkeySummary(plugin: MyPlugin, commandId: string): string {
+	const command = (plugin.app as any).commands?.commands?.[commandId];
+	const hotkey = command?.hotkeys?.[0];
+	if (!hotkey) return "Submit to AI";
+
+	const modifiers = hotkey.modifiers
+		.map((m: string) => m.replace("Mod", "Ctrl/Cmd"))
+		.join("+");
+	return `Submit (${modifiers}+${hotkey.key})`;
+}
 
 class SubmitButtonWidget extends WidgetType {
 	constructor(readonly plugin: MyPlugin) {
@@ -21,35 +33,39 @@ class SubmitButtonWidget extends WidgetType {
 		// Right side: Controls (Add Message, Trim All, Rename, STOP)
 		const controls = submitContainer.createDiv({ cls: "turn-controls" });
 
+		const hotkeyText = getHotkeySummary(this.plugin, `${this.plugin.manifest.id}:${SUBMIT_COMMAND_ID}`);
+
 		const btn = info.createEl("button", {
 			text: "Submit to AI",
-			cls: "turn-footer-btn turn-submit-btn mod-cta"
+			cls: "turn-footer-btn turn-submit-btn mod-cta",
+			attr: {
+				"aria-label": hotkeyText
+			}
 		});
 
 		// Model Input
 		const modelInput = new TextComponent(info)
-			.setPlaceholder("provider/model")
+			.setPlaceholder("Provider/model")
 			.setValue(this.plugin.settings.defaultModel);
 
 		modelInput.inputEl.addClass("turn-model-input");
+		modelInput.inputEl.setAttr("aria-label", "Model: (provider/model-name)");
 
 		// Attach shared suggest logic
 		new ModelInputSuggest(this.plugin.app, modelInput.inputEl, this.plugin);
 
 		// Temperature Input
-		const tempWrapper = info.createDiv({ cls: "turn-temp-wrapper" });
-		tempWrapper.createSpan({ text: "Temp:", cls: "turn-temp-label" });
-		const tempInput = tempWrapper.createEl("input", {
+		const tempInput = info.createEl("input", {
 			type: "number",
 			cls: "turn-temp-input",
 			attr: {
 				step: "0.1",
 				min: "0",
 				max: "1",
-				title: "Temperature"
+				"aria-label": "Temperature (0.0 - 1.0)",
+				value: this.plugin.settings.defaultTemperature.toString()
 			}
 		});
-		tempInput.value = this.plugin.settings.defaultTemperature.toString();
 
 		const renameBtn = controls.createEl("button", {
 			cls: "turn-footer-btn turn-rename-btn clickable-icon"
@@ -74,6 +90,7 @@ class SubmitButtonWidget extends WidgetType {
 			cls: "turn-footer-btn turn-stop-btn mod-destructive"
 		});
 		stopBtn.style.display = "none";
+		stopBtn.setAttr("aria-label", "Cancel response");
 
 		btn.addEventListener("click", async (e) => {
 			e.preventDefault();
@@ -114,9 +131,9 @@ class SubmitButtonWidget extends WidgetType {
 
 			const editor = markdownView.editor;
 			const newLine = `\n\n\`\`\`turn\nrole: user\n\`\`\`\n`;
-			
+
 			editor.replaceRange(newLine, { line: editor.lineCount(), ch: 0 });
-			
+
 			const lineCount = editor.lineCount();
 			editor.setCursor({ line: lineCount, ch: 0 });
 			editor.focus();

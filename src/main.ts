@@ -5,7 +5,7 @@ import { createFooterExtension } from "./footer";
 import { executeChat, hasTurnBlocks, handleAutoRename, parseChatContent } from "./chat-logic";
 import { getProvider } from "./llm/provider-factory";
 import { ModelSuggest } from "./model-suggest";
-import { TURN_BLOCK_START } from "./utils/constants";
+import { TURN_BLOCK_START, SUBMIT_COMMAND_ID } from "./utils/constants";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -79,7 +79,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'submit-turn-chat',
+			id: SUBMIT_COMMAND_ID,
 			name: 'Submit to AI',
 			hotkeys: [{ modifiers: ["Mod", "Shift"], key: "Enter" }],
 			checkCallback: (checking: boolean) => {
