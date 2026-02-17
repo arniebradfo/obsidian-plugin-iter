@@ -60,7 +60,7 @@ class SubmitButtonWidget extends WidgetType {
 		const renameBtn = controls.createEl("button", {
 			cls: "turn-footer-btn turn-rename-btn clickable-icon"
 		});
-		setIcon(renameBtn, "typewriter");
+		setIcon(renameBtn, "file-type-corner");
 		renameBtn.setAttr("aria-label", "Rename chat from summary");
 
 		const trimAllBtn = controls.createEl("button", {
