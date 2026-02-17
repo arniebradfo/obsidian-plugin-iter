@@ -29,7 +29,7 @@ jobs:
         run: |
           tag="${GITHUB_REF#refs/tags/}"
 
-          gh release create "$tag" 
-            --title="$tag" 
-            --draft 
+          gh release create "$tag" \
+            --title="$tag" \
+            --draft \
             main.js manifest.json styles.css
