@@ -2,8 +2,10 @@ import { App, Plugin, TFile, Notice, MarkdownView, Editor, TFolder } from 'obsid
 import { DEFAULT_SETTINGS, MyPluginSettings, InlineAIChatNotebookSettingTab } from "./settings";
 import { registerCodeBlock } from "./codeblock";
 import { createFooterExtension } from "./footer";
-import { executeChat, hasTurnBlocks, handleAutoRename, parseChatContent, getProvider } from "./chat-logic";
+import { executeChat, hasTurnBlocks, handleAutoRename, parseChatContent } from "./chat-logic";
+import { getProvider } from "./llm/provider-factory";
 import { ModelSuggest } from "./model-suggest";
+import { TURN_BLOCK_START } from "./utils/constants";
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -38,6 +40,11 @@ export default class MyPlugin extends Plugin {
 			})
 		);
 
+		this.registerCommands();
+		this.registerRibbonIcons();
+	}
+
+	registerCommands() {
 		this.addCommand({
 			id: 'rename-chat-summary',
 			name: 'Rename Chat from Summary',
@@ -49,7 +56,7 @@ export default class MyPlugin extends Plugin {
 						if (!checking) {
 							const modelInput = activeView.contentEl.querySelector(".turn-model-input") as HTMLInputElement;
 							const selectedModel = modelInput?.value || this.settings.defaultModel;
-							const { provider, actualModel } = getProvider(this, selectedModel);
+							const { provider, actualModel } = getProvider(this.app, this.settings, selectedModel);
 							
 							parseChatContent(this.app, content).then(history => {
 								new Notice("Summarizing and renaming...");
@@ -69,10 +76,6 @@ export default class MyPlugin extends Plugin {
 			callback: async () => {
 				await this.createNewChatFile();
 			}
-		});
-
-		this.addRibbonIcon('message-square-plus', 'New AI Chat Notebook', async () => {
-			await this.createNewChatFile();
 		});
 
 		this.addCommand({
@@ -110,7 +113,7 @@ export default class MyPlugin extends Plugin {
 			id: 'insert-user-turn',
 			name: 'Insert User Message Block',
 			editorCallback: (editor: Editor) => {
-				const block = `\n\n\`\`\`turn\nrole: user\n\`\`\`\n`;
+				const block = `\n\n${TURN_BLOCK_START}\nrole: user\n\`\`\`\n`;
 				editor.replaceRange(block, editor.getCursor());
 			}
 		});
@@ -119,7 +122,7 @@ export default class MyPlugin extends Plugin {
 			id: 'insert-assistant-turn',
 			name: 'Insert Assistant Message Block',
 			editorCallback: (editor: Editor) => {
-				const block = `\n\n\`\`\`turn\nrole: assistant\n\`\`\`\n`;
+				const block = `\n\n${TURN_BLOCK_START}\nrole: assistant\n\`\`\`\n`;
 				editor.replaceRange(block, editor.getCursor());
 			}
 		});
@@ -132,7 +135,7 @@ export default class MyPlugin extends Plugin {
 					const content = editor.getValue();
 					if (hasTurnBlocks(content)) {
 						if (!checking) {
-							const block = `\`\`\`turn\nrole: system\n\`\`\`\n${this.settings.systemPrompt}\n\n`;
+							const block = `${TURN_BLOCK_START}\nrole: system\n\`\`\`\n${this.settings.systemPrompt}\n\n`;
 							let newContent = content;
 							if (content.startsWith("---")) {
 								const endIdx = content.indexOf("---", 3);
@@ -152,6 +155,12 @@ export default class MyPlugin extends Plugin {
 				}
 				return false;
 			}
+		});
+	}
+
+	registerRibbonIcons() {
+		this.addRibbonIcon('message-square-plus', 'New AI Chat Notebook', async () => {
+			await this.createNewChatFile();
 		});
 	}
 
@@ -190,12 +199,12 @@ export default class MyPlugin extends Plugin {
 		const fileName = `Chat - ${dateStr} ${nextNum}.md`;
 		const filePath = folderPath === "/" ? fileName : `${folderPath}/${fileName}`;
 
-		const content = `\n\`\`\`turn
+		const content = `\n${TURN_BLOCK_START}
 role: system
 \`\`\`
 ${this.settings.systemPrompt}
 
-\`\`\`turn
+${TURN_BLOCK_START}
 role: user
 \`\`\`
 `;

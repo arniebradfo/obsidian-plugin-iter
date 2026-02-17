@@ -1,6 +1,7 @@
 import { MarkdownPostProcessorContext, parseYaml, Notice, setIcon, TFile, MarkdownView } from "obsidian";
 import MyPlugin from "./main";
 import { trimAllMessages } from "./chat-logic";
+import { TURN_BLOCK_START } from "./utils/constants";
 
 export function registerCodeBlock(plugin: MyPlugin) {
 	plugin.registerMarkdownCodeBlockProcessor(
@@ -122,7 +123,7 @@ async function deleteSectionFromFile(plugin: MyPlugin, ctx: MarkdownPostProcesso
 
 	let deleteUntil = lines.length;
 	for (let i = section.lineEnd + 1; i < lines.length; i++) {
-		if (lines[i]?.trim().startsWith("```turn")) {
+		if (lines[i]?.trim().startsWith(TURN_BLOCK_START)) {
 			deleteUntil = i;
 			break;
 		}
@@ -144,7 +145,7 @@ async function trimSectionInFile(plugin: MyPlugin, ctx: MarkdownPostProcessorCon
 
 	let messageEnd = lines.length;
 	for (let i = section.lineEnd + 1; i < lines.length; i++) {
-		if (lines[i]?.trim().startsWith("```turn")) {
+		if (lines[i]?.trim().startsWith(TURN_BLOCK_START)) {
 			messageEnd = i;
 			break;
 		}

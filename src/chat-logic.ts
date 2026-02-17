@@ -1,37 +1,10 @@
 import { parseYaml, TFile, App, MarkdownView, Notice, arrayBufferToBase64, requestUrl } from "obsidian";
 import MyPlugin from "./main";
 import { ChatMessage, LLMProvider, ChatImage } from "./llm/interfaces";
-import { OllamaProvider } from "./llm/ollama";
-import { OpenAIProvider } from "./llm/openai";
-import { GeminiProvider } from "./llm/gemini";
-import { AnthropicProvider } from "./llm/anthropic";
-import { AzureOpenAIProvider } from "./llm/azure";
+import { getProvider } from "./llm/provider-factory";
+import { TURN_BLOCK_START } from "./utils/constants";
 
-export function getProvider(plugin: MyPlugin, modelString: string): { provider: LLMProvider, actualModel: string } {
-	let providerId = 'ollama';
-	let actualModel = modelString;
-
-	if (modelString.includes('/')) {
-		const parts = modelString.split('/');
-		providerId = parts[0] || 'ollama';
-		actualModel = parts[1] || modelString;
-	}
-
-	switch (providerId) {
-		case 'ollama':
-			return { provider: new OllamaProvider(plugin.settings), actualModel };
-		case 'openai':
-			return { provider: new OpenAIProvider(plugin.app, plugin.settings), actualModel };
-		case 'gemini':
-			return { provider: new GeminiProvider(plugin.app, plugin.settings), actualModel };
-		case 'anthropic':
-			return { provider: new AnthropicProvider(plugin.app, plugin.settings), actualModel };
-		case 'azure':
-			return { provider: new AzureOpenAIProvider(plugin.app, plugin.settings), actualModel };
-		default:
-			throw new Error(`Unknown provider: ${providerId}`);
-	}
-}
+export { getProvider }; // Re-export for convenience
 
 export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: string, temperature: number) {
 	const submitButtons = document.querySelectorAll(".turn-submit-btn");
@@ -68,7 +41,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 			}
 		}
 
-		const { provider, actualModel } = getProvider(plugin, selectedModel);
+		const { provider, actualModel } = getProvider(plugin.app, plugin.settings, selectedModel);
 		const stream = provider.generateStream(messages, actualModel, temperature);
 
 		let isFirstToken = true;
@@ -77,7 +50,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		for await (const chunk of stream) {
 			if (isFirstToken) {
 				// Append the assistant start block ONLY on first token
-				const assistantStart = `\n\n\`\`\`turn\nrole: assistant\nmodel: ${selectedModel}\ntemp: ${temperature}\n\`\`\`\n`;
+				const assistantStart = `\n\n${TURN_BLOCK_START}\nrole: assistant\nmodel: ${selectedModel}\ntemp: ${temperature}\n\`\`\`\n`;
 				if (editor) {
 					editor.replaceRange(assistantStart, { line: editor.lineCount(), ch: 0 });
 				} else {
@@ -95,7 +68,7 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 
 		if (!isFirstToken) {
 			// Append the trailing user block ONLY if we actually got a response
-			const userEnd = `\n\n\`\`\`turn\nrole: user\n\`\`\`\n`;
+			const userEnd = `\n\n${TURN_BLOCK_START}\nrole: user\n\`\`\`\n`;
 			if (editor) {
 				editor.replaceRange(userEnd, { line: editor.lineCount(), ch: 0 });
 				editor.setCursor({ line: editor.lineCount(), ch: 0 });
@@ -256,7 +229,7 @@ function getMimeType(extension: string): string {
 }
 
 export function hasTurnBlocks(content: string): boolean {
-	return content.includes("```turn");
+	return content.includes(TURN_BLOCK_START);
 }
 
 export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
@@ -268,11 +241,11 @@ export async function trimAllMessages(plugin: MyPlugin, file: TFile) {
 	while (i < lines.length) {
 		const line = lines[i]!;
 		
-		if (line.trim().startsWith("```turn")) {
+		if (line.trim().startsWith(TURN_BLOCK_START)) {
 			newLines.push(line);
 			let nextBlockIdx = lines.length;
 			for (let j = i + 1; j < lines.length; j++) {
-				if (lines[j]?.trim().startsWith("```turn")) {
+				if (lines[j]?.trim().startsWith(TURN_BLOCK_START)) {
 					nextBlockIdx = j;
 					break;
 				}
