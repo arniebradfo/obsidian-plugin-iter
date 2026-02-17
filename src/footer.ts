@@ -18,19 +18,13 @@ class SubmitButtonWidget extends WidgetType {
 
 		// Left side: Info (Submit + Model + Temp)
 		const info = submitContainer.createDiv({ cls: "turn-info" });
-		// Right side: Controls (Add Message, Trim All, Rename)
+		// Right side: Controls (Add Message, Trim All, Rename, STOP)
 		const controls = submitContainer.createDiv({ cls: "turn-controls" });
 
 		const btn = info.createEl("button", {
 			text: "Submit to AI",
 			cls: "turn-footer-btn turn-submit-btn mod-cta"
 		});
-
-		const stopBtn = info.createEl("button", {
-			text: "STOP",
-			cls: "turn-footer-btn turn-stop-btn mod-destructive"
-		});
-		stopBtn.style.display = "none";
 
 		// Model Input
 		const modelInput = new TextComponent(info)
@@ -74,6 +68,12 @@ class SubmitButtonWidget extends WidgetType {
 		});
 		setIcon(addMessageBtn, "user-plus");
 		addMessageBtn.setAttr("aria-label", "Add new message block");
+
+		const stopBtn = controls.createEl("button", {
+			text: "STOP",
+			cls: "turn-footer-btn turn-stop-btn mod-destructive"
+		});
+		stopBtn.style.display = "none";
 
 		btn.addEventListener("click", async (e) => {
 			e.preventDefault();

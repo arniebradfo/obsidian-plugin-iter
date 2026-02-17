@@ -31,11 +31,11 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 
 	const submitButtons = document.querySelectorAll(".turn-submit-btn");
 	const stopButtons = document.querySelectorAll(".turn-stop-btn");
-	const allButtons = document.querySelectorAll(".turn-footer-btn");
 
 	submitButtons.forEach(btn => {
 		if (btn instanceof HTMLButtonElement) {
-			btn.style.display = "none";
+			btn.disabled = true;
+			btn.addClass("mod-loading");
 		}
 	});
 
@@ -125,7 +125,8 @@ export async function executeChat(plugin: MyPlugin, file: TFile, selectedModel: 
 		
 		submitButtons.forEach(btn => {
 			if (btn instanceof HTMLButtonElement) {
-				btn.style.display = "flex";
+				btn.disabled = false;
+				btn.removeClass("mod-loading");
 			}
 		});
 
