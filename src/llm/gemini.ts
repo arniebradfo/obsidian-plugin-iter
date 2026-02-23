@@ -23,10 +23,11 @@ export class GeminiProvider implements LLMProvider {
 	}
 
 	async *generateStream(messages: ChatMessage[], model: string, temperature: number, signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
-		const apiKey = this.settings.geminiApiKeyName;
+		const apiKeyName = this.settings.geminiApiKeyName;
+		const apiKey = await (this.app as any).secretStorage.getSecret(apiKeyName);
 		
 		if (!apiKey) {
-			throw new Error("Gemini API key not found in settings.");
+			throw new Error("Gemini API key not found in Secret Storage.");
 		}
 
 		// Gemini format

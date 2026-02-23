@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, SettingGroup, TextComponent } from "obsidian";
+import { App, PluginSettingTab, Setting, SettingGroup, TextComponent, SecretComponent } from "obsidian";
 import InlineAIChatNotebookPlugin from "./main";
 import { ModelInputSuggest } from "./llm/model-suggest-helper";
 import { ModelConfigModal } from "./settings/model-config-modal";
@@ -38,15 +38,6 @@ export const DEFAULT_SETTINGS: InlineAIChatNotebookSettings = {
 	azureOpenAiModels: 'gpt-4o,gpt-35-turbo'
 }
 
-function addSensitiveSetting(setting: Setting, value: string, onChange: (value: string) => Promise<void>) {
-	setting.addText((text: TextComponent) => {
-		text.inputEl.type = "password";
-		text.setPlaceholder('Enter API key...')
-			.setValue(value)
-			.onChange(onChange);
-	});
-}
-
 export class InlineAIChatNotebookSettingTab extends PluginSettingTab {
 	plugin: InlineAIChatNotebookPlugin;
 
@@ -59,7 +50,7 @@ export class InlineAIChatNotebookSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		// Guideline: Keep general settings at the top without a heading if multiple sections exist.
+		// --- General Section ---
 		new Setting(containerEl)
 			.setName('Default system prompt')
 			.setDesc('The default system prompt for new chat files.')
@@ -152,33 +143,42 @@ export class InlineAIChatNotebookSettingTab extends PluginSettingTab {
 		new SettingGroup(containerEl)
 			.setHeading('OpenAI')
 			.addSetting((setting: Setting) => {
-				setting.setName('OpenAI API key');
-				addSensitiveSetting(setting, this.plugin.settings.openAiApiKeyName, async (value) => {
-					this.plugin.settings.openAiApiKeyName = value;
-					await this.plugin.saveSettings();
-				});
+				setting.setName('OpenAI API key')
+					.setDesc('Select or create a secret for your OpenAI API key.')
+					.addComponent(el => new SecretComponent(this.app, el)
+						.setValue(this.plugin.settings.openAiApiKeyName)
+						.onChange(async value => {
+							this.plugin.settings.openAiApiKeyName = value;
+							await this.plugin.saveSettings();
+						}));
 			});
 
 		// --- Anthropic Section ---
 		new SettingGroup(containerEl)
 			.setHeading('Anthropic')
 			.addSetting((setting: Setting) => {
-				setting.setName('Anthropic API key');
-				addSensitiveSetting(setting, this.plugin.settings.anthropicApiKeyName, async (value) => {
-					this.plugin.settings.anthropicApiKeyName = value;
-					await this.plugin.saveSettings();
-				});
+				setting.setName('Anthropic API key')
+					.setDesc('Select or create a secret for your Anthropic API key.')
+					.addComponent(el => new SecretComponent(this.app, el)
+						.setValue(this.plugin.settings.anthropicApiKeyName)
+						.onChange(async value => {
+							this.plugin.settings.anthropicApiKeyName = value;
+							await this.plugin.saveSettings();
+						}));
 			});
 
 		// --- Google Gemini Section ---
 		new SettingGroup(containerEl)
 			.setHeading('Google Gemini')
 			.addSetting((setting: Setting) => {
-				setting.setName('Gemini API key');
-				addSensitiveSetting(setting, this.plugin.settings.geminiApiKeyName, async (value) => {
-					this.plugin.settings.geminiApiKeyName = value;
-					await this.plugin.saveSettings();
-				});
+				setting.setName('Gemini API key')
+					.setDesc('Select or create a secret for your Gemini API key.')
+					.addComponent(el => new SecretComponent(this.app, el)
+						.setValue(this.plugin.settings.geminiApiKeyName)
+						.onChange(async value => {
+							this.plugin.settings.geminiApiKeyName = value;
+							await this.plugin.saveSettings();
+						}));
 			});
 
 		// --- Azure OpenAI Section ---
@@ -196,11 +196,14 @@ export class InlineAIChatNotebookSettingTab extends PluginSettingTab {
 						}));
 			})
 			.addSetting((setting: Setting) => {
-				setting.setName('Azure API key');
-				addSensitiveSetting(setting, this.plugin.settings.azureOpenAiKeyName, async (value) => {
-					this.plugin.settings.azureOpenAiKeyName = value;
-					await this.plugin.saveSettings();
-				});
+				setting.setName('Azure API key')
+					.setDesc('Select or create a secret for your Azure API key.')
+					.addComponent(el => new SecretComponent(this.app, el)
+						.setValue(this.plugin.settings.azureOpenAiKeyName)
+						.onChange(async value => {
+							this.plugin.settings.azureOpenAiKeyName = value;
+							await this.plugin.saveSettings();
+						}));
 			})
 			.addSetting((setting: Setting) => {
 				setting.setName('Deployment names')

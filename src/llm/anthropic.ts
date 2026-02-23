@@ -17,10 +17,11 @@ export class AnthropicProvider implements LLMProvider {
 	}
 
 	async *generateStream(messages: ChatMessage[], model: string, temperature: number, signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
-		const apiKey = this.settings.anthropicApiKeyName;
+		const apiKeyName = this.settings.anthropicApiKeyName;
+		const apiKey = await (this.app as any).secretStorage.getSecret(apiKeyName);
 		
 		if (!apiKey) {
-			throw new Error("Anthropic API key not found in settings.");
+			throw new Error("Anthropic API key not found in Secret Storage.");
 		}
 
 		const systemMessage = messages.find(m => m.role === "system");

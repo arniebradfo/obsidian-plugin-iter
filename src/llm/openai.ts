@@ -42,16 +42,12 @@ export class OpenAIProvider implements LLMProvider {
 	}
 
 			async *generateStream(messages: ChatMessage[], model: string, temperature: number, signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
-
-				const apiKey = this.settings.openAiApiKeyName;
-
-				
-
-				if (!apiKey) {
-
-					throw new Error("OpenAI API key not found in settings. Please configure it in the plugin settings.");
-
-				}
+		const apiKeyName = this.settings.openAiApiKeyName;
+		const apiKey = await (this.app as any).secretStorage.getSecret(apiKeyName);
+		
+		if (!apiKey) {
+			throw new Error("OpenAI API key not found in Secret Storage. Please configure it in the plugin settings.");
+		}
 
 		
 

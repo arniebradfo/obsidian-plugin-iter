@@ -14,12 +14,13 @@ export class AzureOpenAIProvider implements LLMProvider {
 	}
 
 	async *generateStream(messages: ChatMessage[], model: string, temperature: number, signal?: AbortSignal): AsyncGenerator<string, void, unknown> {
-		const apiKey = this.settings.azureOpenAiKeyName;
+		const apiKeyName = this.settings.azureOpenAiKeyName;
+		const apiKey = await (this.app as any).secretStorage.getSecret(apiKeyName);
 		const endpoint = this.settings.azureOpenAiEndpoint.replace(/\/$/, "");
 		const apiVersion = "2024-02-01";
 
 		if (!apiKey || !endpoint) {
-			throw new Error("Azure OpenAI API key or endpoint not found in settings.");
+			throw new Error("Azure OpenAI API key or endpoint not found. Please check Secret Storage and plugin settings.");
 		}
 
 		const formattedMessages = messages.map(m => {
